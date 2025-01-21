@@ -48,8 +48,8 @@ function updateCounselor($id, $fname, $lname, $email, $department) {
     $email = mysqli_real_escape_string($conn, $email);
     $department = mysqli_real_escape_string($conn, $department);
     
-    // $query = "UPDATE MHP SET fname = '$fname' '$lname', email = '$email', department = '$department' WHERE id = '$id'";
-    $query = "UPDATE MHP SET lname = '$fname' '$lname', email = '$email', department = '$department' WHERE id = '$id'";
+     $query = "UPDATE MHP SET fname = '$fname', lname ='$lname', email = '$email', department = '$department' WHERE id = '$id'";
+
     
     return mysqli_query($conn, $query);
 }

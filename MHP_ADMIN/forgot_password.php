@@ -1,6 +1,5 @@
 <?php
-include 'connect.php';
-require 'vendor/autoload.php'; // Only needed if using Composer
+require_once __DIR__ . '/vendor/autoload.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -56,7 +55,7 @@ if (isset($_POST['resetPassword'])) {
     }
 
     // Check if email exists
-    $checkEmail = "SELECT * FROM Users WHERE email='$email'";
+    $checkEmail = "SELECT * FROM MHP WHERE email='$email'";
     $result = $conn->query($checkEmail);
 
     if ($result->num_rows > 0) {

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Messaging UI</title>
+</head>
+<body class="bg-gray-100">
+  <div class="flex h-screen">
+    <!-- Sidebar -->
+    <div class="w-1/4 bg-white border-r">
+      <div class="p-4 border-b">
+        <h1 class="text-lg font-semibold">Louie Barletta</h1>
+      </div>
+      <ul class="overflow-y-auto">
+        <li class="p-4 flex items-center hover:bg-gray-100 cursor-pointer">
+          <div class="w-10 h-10 bg-gray-300 rounded-full mr-3"></div>
+          <div class="flex-1">
+            <p class="font-semibold">Annie Carpenter</p>
+            <p class="text-sm text-gray-500">Did you talk to Mark? 😊</p>
+          </div>
+          <span class="text-sm text-gray-400">10:37AM</span>
+        </li>
+        <!-- Repeat for other contacts -->
+      </ul>
+    </div>
+
+    <!-- Chat Section -->
+    <div class="flex-1 flex flex-col">
+      <div class="p-4 border-b bg-white flex items-center justify-between">
+        <h2 class="text-lg font-semibold">Mark Appleyard</h2>
+        <button class="text-gray-500">...</button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto p-4 space-y-4">
+        <!-- Messages -->
+        <div class="flex">
+          <div class="w-10 h-10 bg-gray-300 rounded-full mr-3"></div>
+          <div class="bg-gray-100 rounded-lg p-3">
+            <p>Yes. Should we move it to next week?</p>
+          </div>
+        </div>
+        <div class="flex justify-end">
+          <div class="bg-blue-500 text-white rounded-lg p-3">
+            <p>Sure, whatever suits you. I'm free whenever! 😊</p>
+          </div>
+        </div>
+        <!-- Add more messages -->
+      </div>
+
+      <div class="p-4 border-t bg-white flex items-center">
+        <input type="text" placeholder="Send a message" class="flex-1 p-3 border rounded-lg focus:outline-none focus:ring focus:ring-blue-300">
+        <button class="ml-3 p-3 bg-blue-500 text-white rounded-lg">Send</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
