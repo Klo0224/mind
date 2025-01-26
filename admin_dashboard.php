@@ -1,6 +1,6 @@
 <!-- index.php -->
 <?php
-require_once 'mhp_acc_mhp.php';
+require_once 'admin_mhp_acc.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add') {
     $result = addCounselor($_POST['fname'], $_POST['lname'], $_POST['email'], $_POST['department']);
@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <!-- Header Section -->
         <div class="flex justify-between items-center mb-6">
     <h1 class="text-3xl font-bold">Guidance Counselor Management</h1>
-    <form method="POST" action="admin.php">
+    <form method="POST" action="admin_login.php">
         <button type="submit" 
                 class="inline-block mt-6 bg-white text-[#1cabe3] font-bold border-2 border-[#1cabe3] py-3 px-6 rounded-lg hover:bg-[#1cabe3] hover:text-white transition duration-300">
             Logout
@@ -175,7 +175,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <script>
     function editCounselor(id) {
-        $.get('get_mhp.php', {id: id}, function(data) {
+        $.get('admin_get_mhp.php', {id: id}, function(data) {
             const MHP = JSON.parse(data);
             $('#edit_id').val(MHP.id);
             $('#edit_fname').val(MHP.fname);

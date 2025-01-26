@@ -128,18 +128,13 @@
                 <img src="images/Vector.svg" alt="Mental Wellness Companion" class="w-5 h-5">
                 <span class="menu-text ml-3">Profile</span>
             </a>
-                <a href="#" class="menu-item flex items-center px-6 py-3 text-gray-600" data-section="chat" id="chatItem">
-                <img src="images/Vector.svg" alt="Mental Wellness Companion" class="w-5 h-5">
-                <span class="menu-text ml-3">Chat</span>
-            </a>
         </nav>
 
         <!-- User Profile and Logout Section -->
         <div class="absolute bottom-0 w-full border-t">
             <!-- User Profile -->
             <a href="#" class="menu-item flex items-center px-6 py-4 text-gray-600">
-                <img src="<?php echo htmlspecialchars($profileImage); ?>" alt="Profile Image" class="w-8 h-8 rounded-full">
-                <span class="menu-text ml-3"><?php echo htmlspecialchars($fullName); ?></span>
+                <span class="menu-text ml-8"><?php echo htmlspecialchars($fullName); ?></span>
             </a>
 
             <!-- Logout -->

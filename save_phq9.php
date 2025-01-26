@@ -46,6 +46,20 @@ $answerTexts = [
     3 => "Nearly every day"
 ];
 
+// Determine severity based on total score
+$severity = "";
+if ($data['total_score'] >= 0 && $data['total_score'] <= 4) {
+    $severity = "None-minimal";
+} elseif ($data['total_score'] >= 5 && $data['total_score'] <= 9) {
+    $severity = "Mild";
+} elseif ($data['total_score'] >= 10 && $data['total_score'] <= 14) {
+    $severity = "Moderate";
+} elseif ($data['total_score'] >= 15 && $data['total_score'] <= 19) {
+    $severity = "Moderately severe";
+} else {
+    $severity = "Severe";
+}
+
 // Convert numeric answers to text responses
 $textAnswers = array_map(function($answer) use ($answerTexts) {
     return isset($answerTexts[$answer]) ? $answerTexts[$answer] : "Invalid Response";
@@ -55,25 +69,26 @@ try {
     // Prepare the SQL statement
     $stmt = $conn->prepare("INSERT INTO phq9_responses (
         user_id, 
-        question_1, 
-        question_2, 
-        question_3, 
-        question_4, 
-        question_5, 
-        question_6, 
-        question_7, 
-        question_8, 
-        question_9, 
+        question_1,
+        question_2,
+        question_3,
+        question_4,
+        question_5,
+        question_6,
+        question_7,
+        question_8,
+        question_9,
         response_score,
+        severity,
         response_date
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
 
     if (!$stmt) {
         throw new Exception("Prepare failed: " . $conn->error);
     }
 
-    // Bind the parameters
-    $stmt->bind_param("isssssssssi",
+    // Bind the parameters - note the additional 's' for severity
+    $stmt->bind_param("isssssssssss",
         $user_id,
         $textAnswers[0],
         $textAnswers[1],
@@ -84,7 +99,8 @@ try {
         $textAnswers[6],
         $textAnswers[7],
         $textAnswers[8],
-        $data['total_score']
+        $data['total_score'],
+        $severity
     );
 
     // Execute the statement

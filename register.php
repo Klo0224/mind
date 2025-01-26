@@ -1,78 +1,80 @@
 <?php 
-    include 'connect.php';
+include 'connect.php';
 
-    function isValidEmail($email) {
-        return filter_var($email, FILTER_VALIDATE_EMAIL);
+function isValidEmail($email) {
+    return filter_var($email, FILTER_VALIDATE_EMAIL) && preg_match('/@usl\.edu\.ph$/', $email);
+}
+
+if(isset($_POST['signUp'])){
+    $firstName = $_POST['firstName'];
+    $lastName = $_POST['lastName'];
+    $email = $_POST['email'];
+    $idnum = $_POST['idnum'];  
+    $course = $_POST['course']; 
+    $year = $_POST['year'];  
+    $dept = $_POST['dept'];  
+    $password = $_POST['password'];
+    $hashedPassword = md5($password);
+
+    // Validate email syntax and domain
+    if (!isValidEmail($email)) {
+        echo "<script type='text/javascript'>alert('Invalid email format! Please use your corporate email address.');</script>";
+        exit();
     }
 
-    if(isset($_POST['signUp'])){
-        $firstName = $_POST['firstName'];
-        $lastName = $_POST['lastName'];
-        $email = $_POST['email'];
-        $password = $_POST['password'];
-        $password = md5($password);
-    
-        // Validate email syntax
-        if (!isValidEmail($email)) {
-            echo "Invalid email format!";
-            exit();
-        }
-    
-        // Check if email ends with "@usl.edu.ph"
-        if (!preg_match("/@usl\.edu\.ph$/", $email)) {
-            echo "<script type='text/javascript'>
-            alert('Invalid email domain. Please use @usl.edu.ph');
+    // Check if the email already exists
+    $checkEmail = "SELECT * FROM users WHERE email='$email'";
+    $result = $conn->query($checkEmail);
+
+    if($result->num_rows > 0){
+        echo "<script type='text/javascript'>
+            alert('Email Address Already Exists!');
             window.location.href = 'Login.html';
             </script>";
-            exit();
-        }
-    
-        $checkEmail = "SELECT * FROM Users WHERE email='$email'";
-        $result = $conn->query($checkEmail);
-    
-        if($result->num_rows > 0){
+    } else {
+        $insertQuery = "INSERT INTO users (Student_id, firstName, lastName, email, password, Course, Year, Department)
+                        VALUES ('$idnum', '$firstName', '$lastName', '$email', '$hashedPassword', '$course', '$year', '$dept')";
+        
+        if($conn->query($insertQuery) === TRUE){
             echo "<script type='text/javascript'>
-                alert('Email Address Already Exists!');
+                alert('Registration successful!');
                 window.location.href = 'Login.html';
                 </script>";
-        } else {
-            $insertQuery = "INSERT INTO Users (firstName, lastName, email, password)
-                            VALUES ('$firstName', '$lastName', '$email', '$password')";
-            if($conn->query($insertQuery) === TRUE){
-                header("Location: Login.html");
-                exit();
-            } else {
-                echo "Error: " . $conn->error;
-            }
-        }
-    }
-
-    if(isset($_POST['signIn'])){
-        $email = $_POST['email'];
-        $password = $_POST['password'];
-        $password = md5($password);
-
-        // Validate email syntax
-        if (!isValidEmail($email)) {
-            echo "Invalid email format!";
-            exit();
-        }
-
-        $sql = "SELECT * FROM Users WHERE email='$email' AND password='$password'";
-        $result = $conn->query($sql);
-
-        if($result->num_rows > 0){
-            session_start();
-            $row = $result->fetch_assoc();
-            $_SESSION['email'] = $row['email'];
-            header("Location: gracefulThread.php");
             exit();
         } else {
-            
-            echo "<script type='text/javascript'>
-                alert('Not Found, Incorrect Email or Password');
-                window.location.href = 'Login.html';
-                </script>";
+            echo "Error: " . $conn->error;
         }
     }
+}
+
+// Login Logic
+if(isset($_POST['signIn'])){
+    $email = $_POST['email'];
+    $password = $_POST['password'];
+    $hashedPassword = md5($password);
+
+    // Validate email syntax and domain
+    if (!isValidEmail($email)) {
+        echo "<script type='text/javascript'>alert('Invalid email format! Please use your corporate email address.');</script>";
+        exit();
+    }
+
+    $sql = "SELECT * FROM users WHERE email='$email' AND password='$hashedPassword'";
+    $result = $conn->query($sql);
+
+    if($result->num_rows > 0){
+        session_start();
+        $row = $result->fetch_assoc();
+        $_SESSION['email'] = $row['email'];
+        echo "<script type='text/javascript'>
+            window.location.href = 'gracefulThread.php';
+            </script>";
+        exit();
+    } else {
+        echo "<script type='text/javascript'>
+            alert('Incorrect Email or Password');
+            window.location.href = 'Login.html';
+            </script>";
+    }
+}
 ?>

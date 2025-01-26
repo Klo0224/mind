@@ -5,6 +5,20 @@
   <title>Login</title>
   <link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css'>
   <link rel="stylesheet" href="Login.css">
+  <style>
+    .form-container form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    }
+
+    .form-container input {
+        width: 80%; /* Adjust width to fit the form */
+        margin: 3px 0; /* Add some space between fields */
+    }
+
+  </style>
 
 </head>
 <body>
@@ -22,6 +36,10 @@
       <input type="text" name="firstName" id="firstName" placeholder="First Name" required />
       <input type="text" name="lastName" id="lastName" placeholder="Last Name" required/>
       <input type="email" name="email" id="email" placeholder="Email" required/>
+      <input type="idnum" name="idnum" id="idnum" placeholder="id number" required/>
+      <input type="course" name="course" id="course" placeholder="Course" required/>
+      <input type="year" name="year" id="year" placeholder="Year" required/>
+      <input type="dept" name="dept" id="dept" placeholder="Department" required/>
       <input type="password" name="password" id="password" placeholder="Password"required />
       <input type="submit" class="SignUP" value="Sign Up" name="signUp">
       <!-- <button name="signUp" id="SignUp" class="SignUP">Sign Up</button> -->
@@ -52,8 +70,8 @@
         <div class="overlay-panel overlay-right">
           <h2 cl>Welcome to</h2>
           <h1>Mindsoothe!</h1>
-          <p>Begin your journey to inner peace and mental wellness..</p>
-          <!-- <button class="ghost" id="signUp">Sign Up</button> -->
+          <p>Begin your journey to inner peace and mental wellness by creating your account.</p>
+          <button class="ghost" id="signUp">Sign Up</button>
         </div>
       </div>
     </div>
@@ -66,6 +84,7 @@
       })
       .catch(error => console.error('Error fetching Google Auth URL:', error));
   </script>
+  
   
 
   <script  src="Login.js"></script>

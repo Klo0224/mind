@@ -1,102 +1,114 @@
 <?php
-session_start();
+include("connect.php");
+include("auth.php");
 
-// Database connection
-$host = "localhost";
-$user = "root";
-$pass = "";
-$db = "_Mindsoothe";
-$conn = new mysqli($host, $user, $pass, $db);
-
-// Set content type to JSON
+// Ensure JSON response
 header('Content-Type: application/json');
 
-// Check connection
-if ($conn->connect_error) {
-    http_response_code(500);
-    echo json_encode(['error' => 'Database connection failed']);
-    exit;
+try {
+    // Verify user is logged in
+    if (!isset($_SESSION['email'])) {
+        throw new Exception('User not authenticated');
+    }
+
+    $method = $_SERVER['REQUEST_METHOD'];
+
+    switch ($method) {
+        case 'POST':
+            $input = json_decode(file_get_contents('php://input'), true);
+            
+            if (!$input || !validateTimeSlotInput($input)) {
+                throw new Exception('Invalid input data');
+            }
+            
+            $sql = "INSERT INTO time_slots (user_id, day_of_week, start_time, end_time) VALUES (?, ?, ?, ?)";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param('isss', 
+                $userId, 
+                $input['day'], 
+                $input['start_time'], 
+                $input['end_time']
+            );
+            
+            if (!$stmt->execute()) {
+                throw new Exception('Failed to add time slot: ' . $stmt->error);
+            }
+            
+            echo json_encode(['success' => true, 'message' => 'Time slot added successfully']);
+            $stmt->close();
+            break;
+        
+        case 'GET':
+            $sql = "SELECT * FROM time_slots WHERE user_id = ? ORDER BY day_of_week, start_time";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param('i', $userId);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            $timeSlots = [];
+            while ($row = $result->fetch_assoc()) {
+                $timeSlots[] = $row;
+            }
+            
+            echo json_encode($timeSlots);
+            $stmt->close();
+            break;
+        
+        case 'DELETE':
+            if (!isset($_GET['id'])) {
+                throw new Exception('No time slot ID provided');
+            }
+            
+            $id = intval($_GET['id']);
+            $sql = "DELETE FROM time_slots WHERE id = ? AND user_id = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param('ii', $id, $userId);
+            
+            if (!$stmt->execute()) {
+                throw new Exception('Failed to delete time slot: ' . $stmt->error);
+            }
+            
+            echo json_encode(['success' => true, 'message' => 'Time slot deleted successfully']);
+            $stmt->close();
+            break;
+        
+        default:
+            throw new Exception('Unsupported HTTP method');
+    }
+
+    $conn->close();
+
+} catch (Exception $e) {
+    http_response_code(400);
+    echo json_encode([
+        'success' => false, 
+        'error' => $e->getMessage()
+    ]);
 }
 
-// Get the request method
-$method = $_SERVER['REQUEST_METHOD'];
-
-// Handle GET request (fetch time slots)
-if ($method === 'GET') {
-    $query = "
-        SELECT id, day_of_week, 
-               TIME_FORMAT(start_time, '%H:%i') as start_time, 
-               TIME_FORMAT(end_time, '%H:%i') as end_time
-        FROM time_slots 
-        ORDER BY 
-            CASE 
-                WHEN day_of_week = 'Monday' THEN 1
-                WHEN day_of_week = 'Tuesday' THEN 2
-                WHEN day_of_week = 'Wednesday' THEN 3
-                WHEN day_of_week = 'Thursday' THEN 4
-                WHEN day_of_week = 'Friday' THEN 5
-            END,
-            start_time
-    ";
-    
-    $result = $conn->query($query);
-    
-    if (!$result) {
-        http_response_code(500);
-        echo json_encode(['error' => 'Failed to fetch time slots']);
-        exit;
+// Validation function
+function validateTimeSlotInput($input) {
+    $requiredFields = ['day', 'start_time', 'end_time'];
+    foreach ($requiredFields as $field) {
+        if (!isset($input[$field]) || empty($input[$field])) {
+            return false;
+        }
     }
     
-    $timeSlots = [];
-    while ($row = $result->fetch_assoc()) {
-        $timeSlots[] = $row;
+    $validDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+    if (!in_array($input['day'], $validDays)) {
+        return false;
     }
     
-    echo json_encode($timeSlots);
+    $start = strtotime($input['start_time']);
+    $end = strtotime($input['end_time']);
+    $minTime = strtotime('07:30');
+    $maxTime = strtotime('17:00');
+    
+    return $start !== false && 
+           $end !== false && 
+           $start < $end && 
+           $start >= $minTime && 
+           $end <= $maxTime;
 }
-
-// Handle POST request (add new time slot)
-else if ($method === 'POST') {
-    $data = json_decode(file_get_contents('php://input'), true);
-    
-    if (!isset($data['day']) || !isset($data['start_time']) || !isset($data['end_time'])) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Missing required fields']);
-        exit;
-    }
-    
-    $stmt = $conn->prepare("INSERT INTO time_slots (day_of_week, start_time, end_time, user_id) VALUES (?, ?, ?, ?)");
-    $userId = 1; // Default user ID for testing
-    $stmt->bind_param("sssi", $data['day'], $data['start_time'], $data['end_time'], $userId);
-    
-    if ($stmt->execute()) {
-        echo json_encode(['success' => true, 'id' => $conn->insert_id]);
-    } else {
-        http_response_code(500);
-        echo json_encode(['error' => 'Failed to save time slot']);
-    }
-    $stmt->close();
-}
-
-// Handle DELETE request
-else if ($method === 'DELETE') {
-    if (!isset($_GET['id'])) {
-        http_response_code(400);
-        echo json_encode(['error' => 'Missing ID parameter']);
-        exit;
-    }
-    
-    $stmt = $conn->prepare("DELETE FROM time_slots WHERE id = ?");
-    $stmt->bind_param("i", $_GET['id']);
-    
-    if ($stmt->execute() && $stmt->affected_rows > 0) {
-        echo json_encode(['success' => true]);
-    } else {
-        http_response_code(404);
-        echo json_encode(['error' => 'Time slot not found']);
-    }
-    $stmt->close();
-}
-
-$conn->close();
 ?>

@@ -154,6 +154,10 @@
                 <img src="images/Vector.svg" alt="Mental Wellness Companion" class="w-5 h-5">
                 <span class="menu-text ml-3">Mental Wellness Companion</span>
             </a>
+            <a href="#" class="menu-item flex items-center px-6 py-3 text-gray-600" data-section="profile" id="ProfileItem">
+                <img src="images/Vector.svg" alt="Profile" class="w-5 h-5">
+                <span class="menu-text ml-3">Profile</span>
+            </a>
         </nav>
 
         <!-- User Profile and Logout Section -->
@@ -198,11 +202,6 @@
                                 <div class="text-lg font-bold text-gray-800">' . htmlspecialchars($row["fname"] . ' ' . $row["lname"]) . '</div>
                                 <div class="text-sm text-gray-500">' . htmlspecialchars($row["department"]) . '</div>
                             </div>
-                        </div>
-                        <div class="flex flex-wrap justify-center gap-2 mb-4">
-                            <div class="bg-gray-200 rounded-full px-3 py-1 text-xs text-gray-600">Stress</div>
-                            <div class="bg-gray-200 rounded-full px-3 py-1 text-xs text-gray-600">Anxiety</div>
-                            <div class="bg-gray-200 rounded-full px-3 py-1 text-xs text-gray-600">Depression</div>
                         </div>
                         <div class="flex justify-center mt-4">
                             <button class="bg-white text-[#1cabe3] border-2 border-[#1cabe3] px-4 py-1 rounded hover:bg-[#1cabe3] hover:text-white transition duration-300 ease-in-out"

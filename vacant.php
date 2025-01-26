@@ -1,6 +1,7 @@
 <?php
-        include("auth.php");
-        ?>
+include("auth.php");
+
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -95,20 +96,51 @@
                 <img src="images/Vector.svg" alt="Mental Wellness Companion" class="w-5 h-5">
                 <span class="menu-text ml-3">Profile</span>
             </a>
-            <a href="#" class="menu-item flex items-center px-6 py-3 text-gray-600" data-section="chat" id="chatItem">
-                <img src="images/Vector.svg" alt="Mental Wellness Companion" class="w-5 h-5">
-                <span class="menu-text ml-3">Chat</span>
-            </a>
         </nav>
+         <!-- User Profile and Logout Section -->
+         <div class="absolute bottom-0 w-full border-t">
+             <!-- Hidden file input -->
+             <input type="file" id="fileInput" accept="image/*" style="display: none;">
 
-        <!-- User Profile and Logout Section -->
-        <div class="absolute bottom-0 w-full border-t">
-            <!-- User Profile -->
-            <a href="#" class="menu-item flex items-center px-6 py-4 text-gray-600">
-                <img src="<?php echo htmlspecialchars($profileImage); ?>" alt="Profile Image" class="w-8 h-8 rounded-full">
-                <span class="menu-text ml-3"><?php echo htmlspecialchars($fullName); ?></span>
-            </a>
+<script>
+    
+    document.getElementById('profile-upload').addEventListener('change', function () {
+    const selectedFile = this.files[0];
+    if (!selectedFile) return;
 
+    const confirmation = confirm('Are you sure you want to change your profile picture?');
+    if (!confirmation) {
+        this.value = ''; 
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('profileImage', selectedFile);
+
+    fetch('stud_editprofile.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            document.getElementById('student-image').src = data.newImagePath;
+            alert(data.message);
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An unexpected error occurred');
+    });
+});
+</script>
             <!-- Logout -->
             <a href="landingpage.html" class="menu-item flex items-center px-6 py-4 text-red-500 hover:text-red-700">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -119,11 +151,29 @@
         </div>
     </div>
     <div class="pl-64">
+
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8" style="width: 1200px; margin-left: 30px; margin-top: 30px">
+                <div class="flex items-center">
+                    <div class="relative">
+                    <img id="student-image" src="<?php echo isset($_SESSION['profile_image']) ? htmlspecialchars($_SESSION['profile_image']) : '/api/placeholder/100/100'; ?>" alt="Profile Picture" class="w-24 h-24 rounded-full object-cover">
+                <label for="profile-upload" class="absolute bottom-0 right-0 bg-blue-500 rounded-full p-2 cursor-pointer hover:bg-blue-600">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                        </label>
+                        <input type="file" id="profile-upload" class="hidden" accept="image/*">
+                    </div>
+                    <div class="ml-6">
+                    <h2 class="text-2xl font-bold"><?php echo htmlspecialchars($fullName); ?></h2>
+                    <p class="text-gray-600">Department: <?php echo htmlspecialchars($Department); ?></p>
+                    </div>
+                </div>
+            </div>
     <div class="p-8 ml-4">
         <!-- Header -->
         <div class="mb-6 ">
             <h1 class="text-2xl font-bold text-gray-800">My Available Time</h1>
-            <p class="text-gray-600">Set your vacant time slots for counseling</p>
+            <p class="text-gray-600">Set your vacant time slots for counseling</p> 
         </div>
 
       <!-- Add New Time Slot Form -->
@@ -184,91 +234,68 @@
     const endTimeInput = form.querySelector('[name="end_time"]');
     
      // Function to validate time range
-     function validateTimeRange(startTime, endTime) {
-        const start = new Date(`2000-01-01T${startTime}`);
-        const end = new Date(`2000-01-01T${endTime}`);
+function validateTimeRange(startTime, endTime) {
+    // Convert 12-hour time to minutes
+    const timeToMinutes = (time) => {
+        const [time12, period] = time.split(' ');
+        let [hours, minutes] = time12.split(':').map(Number);
         
-        // Check if end time is after start time
-        if (end <= start) {
-            return {
-                isValid: false,
-                message: 'End time must be later than start time'
-            };
-        }
+        if (period === 'PM' && hours !== 12) hours += 12;
+        if (period === 'AM' && hours === 12) hours = 0;
+        
+        return hours * 60 + minutes;
+    };
 
-         // Check if times are within allowed range (7:30 AM - 5:00 PM)
-         const minTime = new Date(`2000-01-01T07:30:00`);
-        const maxTime = new Date(`2000-01-01T17:00:00`);
+    const startMinutes = timeToMinutes(startTime);
+    const endMinutes = timeToMinutes(endTime);
 
-        if (start < minTime || end > maxTime) {
-            return {
-                isValid: false,
-                message: 'Time must be between 7:30 AM and 5:00 PM'
-            };
-        }
-
+    if (endMinutes <= startMinutes) {
         return {
-            isValid: true
+            isValid: false,
+            message: 'End time must be later than start time'
         };
     }
 
-    // Add input event listeners for real-time validation
-    [startTimeInput, endTimeInput].forEach(input => {
-        input.addEventListener('change', function() {
-            const startTime = startTimeInput.value;
-            const endTime = endTimeInput.value;
-
-            if (startTime && endTime) {
-                const validation = validateTimeRange(startTime, endTime);
-                if (!validation.isValid) {
-                    alert(validation.message);
-                    input.value = ''; // Clear the invalid input
-                }
-            }
-        });
-    });
+    return { isValid: true };
+}
 
 // Form submission validation
 form.addEventListener('submit', async function(e) {
-        e.preventDefault();
+    e.preventDefault();
+    
+    const formData = {
+        day: form.querySelector('[name="day"]').value,
+        start_time: startTimeInput.value,
+        end_time: endTimeInput.value,
+        user_id: 1
+    };
+
+    try {
+        const response = await fetch('get_vacant.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+
+        const result = await response.json();
         
-        const formData = {
-            day: form.querySelector('[name="day"]').value,
-            start_time: startTimeInput.value,
-            end_time: endTimeInput.value,
-            user_id: 1
-        };
+        console.log('Server response:', result);
 
-        const validation = validateTimeRange(formData.start_time, formData.end_time);
-        
-        if (!validation.isValid) {
-            alert(validation.message);
-            return;
+        if(result.success) {
+            alert('Time slot saved successfully!');
+            loadTimeSlots();
+            form.reset();
+        } else {
+            alert('Error: ' + (result.error || 'Unknown error'));
+            console.error('Server error details:', result);
         }
-
-        try {
-            const response = await fetch('get_vacant.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            });
-
-            const result = await response.json();
-            
-            if(result.success) {
-                alert('Time slot saved successfully!');
-                loadTimeSlots();
-                form.reset();
-            } else {
-                alert('Error: ' + (result.error || 'Unknown error'));
-            }
-        } catch (error) {
-            console.error('Error:', error);
-            alert('Failed to save time slot: ' + error.message);
-        }
-    });
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to save time slot: ' + error.message);
+    }
+});
 });
 
 // Function to load time slots
@@ -276,16 +303,27 @@ form.addEventListener('submit', async function(e) {
 async function loadTimeSlots() {
     try {
         const response = await fetch('get_vacant.php');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+        
+        // Add detailed logging
+        console.log('Response status:', response.status);
+        console.log('Content-Type:', response.headers.get('Content-Type'));
+        
+        const text = await response.text();
+        console.log('Raw response:', text);
+        
+        let timeSlots;
+        try {
+            timeSlots = JSON.parse(text);
+        } catch (parseError) {
+            console.error('JSON Parsing Error:', parseError);
+            throw new Error('Invalid JSON response: ' + text);
         }
-        const timeSlots = await response.json();
-        console.log('Loaded time slots:', timeSlots);
+
+        console.log('Parsed time slots:', timeSlots);
 
         const tbody = document.querySelector('table tbody');
-        tbody.innerHTML = ''; // Clear existing content
+        tbody.innerHTML = ''; 
 
-        // Handle empty state
         if (!Array.isArray(timeSlots) || timeSlots.length === 0) {
             document.getElementById('emptyState').classList.remove('hidden');
             return;
@@ -293,7 +331,6 @@ async function loadTimeSlots() {
 
         document.getElementById('emptyState').classList.add('hidden');
 
-        // Render time slots
         timeSlots.forEach(slot => {
             const row = document.createElement('tr');
             row.innerHTML = `
@@ -308,10 +345,9 @@ async function loadTimeSlots() {
         });
     } catch (error) {
         console.error('Error loading time slots:', error);
-        // Show error message to user
         const errorDiv = document.createElement('div');
         errorDiv.className = 'text-red-600 p-4';
-        errorDiv.textContent = 'Failed to load time slots. Please try again later.';
+        errorDiv.textContent = 'Failed to load time slots: ' + error.message;
         document.querySelector('table').before(errorDiv);
     }
 }

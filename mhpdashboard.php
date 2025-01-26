@@ -1,16 +1,22 @@
 <?php
-session_start();
-$conn = new mysqli("localhost", "root", "", "_Mindsoothe");
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
-$result = $conn->query("SELECT profile_image FROM mhp WHERE id=1");
-$row = $result->fetch_assoc();
-$counselorProfileImage = !empty($row['profile_image']) ? $row['profile_image'] : '/api/placeholder/100/100';
-$_SESSION['counselor-image'] = $counselorProfileImage;
-$conn->close();
-?>
+include("auth_mhp.php");
 
+// // Fetch PHQ9 severity result
+// $Student_id = $_GET['Student_id'];
+// $query = "SELECT severity FROM phq9_responses WHERE user_id = ? ORDER BY response_date DESC LIMIT 1";
+// $stmt = $conn->prepare($query);
+// $stmt->bind_param("i", $Student_id);
+// $stmt->execute();
+// $result = $stmt->get_result();
+
+// $phq9_result = 'No data available';
+// if ($result->num_rows > 0) {
+//     $row = $result->fetch_assoc();
+//     $phq9_result = $row['severity'];
+// }
+
+// $conn->close();
+?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -86,7 +92,7 @@ $conn->close();
 
         <!-- Logout Button -->
         <div class="absolute bottom-0 w-full p-6 border-t">
-            <a href="../landingpage.html" class="flex items-center text-red-500 hover:text-red-700">
+            <a href="landingpage.html" class="flex items-center text-red-500 hover:text-red-700">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
@@ -117,7 +123,7 @@ $conn->close();
                     </div>
                 </div>
             </div> -->
-            <div class="bg-white rounded-lg shadow-md p-6 mb-8" style="width: 1200px; margin-left: 30px; margin-top: 30px">
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8" style="width: 1200px; margin-left: 13px; margin-top: 30px">
                 <div class="flex items-center">
                     <div class="relative">
                        
@@ -130,8 +136,8 @@ $conn->close();
                         <input type="file" id="profile-upload" class="hidden" accept="image/*">
                     </div>
                     <div class="ml-6">
-                        <h2 class="text-2xl font-bold">Maloi Ricalde</h2>
-                        <p class="text-gray-600">Department: SACE</p>
+                    <h2 class="text-2xl font-bold"><?php echo htmlspecialchars($fullname); ?></h2>
+                    <p class="text-gray-600">Department: <?php echo htmlspecialchars($department); ?></p>
                     </div>
                 </div>
             </div>
@@ -142,7 +148,7 @@ $conn->close();
             const formData = new FormData();
             formData.append('profile_image', file);
 
-            fetch('upload_profile.php', {
+            fetch('mhp_upload_profile.php', {
                 method: 'POST',
                 body: formData
             })
@@ -182,7 +188,10 @@ $conn->close();
                 <!-- Student results will be dynamically inserted here -->
             </div>
 
+            
+
             <script>
+
                 // Function to handle Enter key press
                 function handleKeyPress(event) {
                     console.log("Key pressed:", event.key); // Debugging line
@@ -204,7 +213,7 @@ $conn->close();
 
                     try {
                         // Fetch results from the server
-                        const response = await fetch(`bonback.php?query=${encodeURIComponent(searchInput)}`);
+                        const response = await fetch(`mhp_search.php?query=${encodeURIComponent(searchInput)}`);
                         const students = await response.json();
 
                         // Check if students were found
@@ -244,7 +253,7 @@ $conn->close();
                                             <p>Course: ${student.Course}</p>
                                             <p>Year: ${student.Year}</p>
                                             <p>Department: ${student.Department}</p>
-                                            <p>PHQ9 Result: ${student.PhResult}</p>
+                                            <p>PHQ9 Result: <?php echo htmlspecialchars($phq9_result); ?></p>
                                         </div>
 
                                         <!-- Right Section: Vacant Time -->
@@ -258,7 +267,10 @@ $conn->close();
                                         <!-- Bottom Buttons -->
                                         <div class="flex justify-between mt-4">
                                             <button onclick="openChat('${student.Student_id}')" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">Message</button>
-                                            <button onclick="printCallSlip('${student.Student_id}')" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600">Print Call Slip</button>
+                                           <button onclick="printCallSlip('${student.Student_id}')" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600">
+                                            Print Call Slip
+                                            </button>
+
                                         </div>
                                     </div>
                                 </div>
@@ -377,7 +389,7 @@ $conn->close();
 
                     try {
                         // Fetch results from the server
-                        const response = await fetch(`bonback.php?query=${encodeURIComponent(searchInput)}`);
+                        const response = await fetch(`mhp_search.php?query=${encodeURIComponent(searchInput)}`);
                         const students = await response.json();
 
                         // Check if students were found
@@ -554,6 +566,11 @@ $conn->close();
                 console.log(`Printing call slip for ${studentName}`);
             }
         </script>
+        <script>
+    function printCallSlip(studentId) {
+        window.location.href = `call_slip.php?student_id=${encodeURIComponent(studentId)}`;
+    }
+</script>
     </div>
  </body>
 </html>
