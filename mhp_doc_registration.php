@@ -417,7 +417,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['signIn'])) {
           
           <input type="email" name="email" placeholder="Email" required/>
           <input type="password" name="password" placeholder="Password" required/>
-          <a href="forgot_password.html">Forgot your password?</a>
+          <a href="mhp_forgot_password.html">Forgot your password?</a>
           <button type="submit" name="signIn">Sign In</button>
         </form>
       </div>

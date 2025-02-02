@@ -23,7 +23,7 @@ if (isset($_POST['reset'])) {
     if ($conn->query($updatePassword) === TRUE) {
         echo "<script type='text/javascript'>
                 alert('Password has been reset. Please log in.');
-                window.location.href = 'Login.html';
+                window.location.href = 'mhp_doc_registration.php';
                 </script>";
         // Clear the session
         session_unset();
