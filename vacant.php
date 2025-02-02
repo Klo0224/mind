@@ -1,6 +1,60 @@
 <?php
-include("auth.php");
 
+// include("auth.php");
+// // Use session profile image if available, otherwise fetch from database
+// $profileImage = isset($_SESSION['profile_image']) ? $_SESSION['profile_image'] : 'images/blueuser.svg';
+
+// // If not in session but user is logged in, fetch from database
+// if (!isset($_SESSION['profile_image']) && isset($_SESSION['email'])) {
+//     $email = $_SESSION['email'];
+//     $query = $conn->prepare("SELECT profile_image FROM users WHERE email = ?");
+//     $query->bind_param("s", $email);
+//     $query->execute();
+//     $result = $query->get_result();
+//     if ($result->num_rows > 0) {
+//         $userData = $result->fetch_assoc();
+//         $profileImage = $userData['profile_image'];
+//         $_SESSION['profile_image'] = $profileImage;
+//     }
+// }
+include("auth.php");
+// Function to get current profile image
+function getCurrentProfileImage($conn) {
+    // Check if profile image is already cached in the session
+    if (isset($_SESSION['profile_image'])) {
+        return $_SESSION['profile_image'];
+    }
+
+    // Check if the session has the user email
+    if (isset($_SESSION['email'])) {
+        $email = $_SESSION['email'];
+
+        // Use a prepared statement to fetch the profile image from the users table
+        $stmt = $conn->prepare("SELECT profile_image FROM users WHERE email = ?");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            $row = $result->fetch_assoc();
+            $profileImage = !empty($row['profile_image']) ? $row['profile_image'] : 'images/blueuser.svg';
+
+            // Cache the result in the session to avoid repeated database calls
+            $_SESSION['profile_image'] = $profileImage;
+
+            return $profileImage;
+        }
+    }
+
+    // Return default image if no session or database result
+    return 'images/blueuser.svg';
+}
+
+// Include session start and database connection
+include("connect.php");
+
+// Get the profile image dynamically
+$profileImage = getCurrentProfileImage($conn);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -93,54 +147,11 @@ include("auth.php");
                 <span class="menu-text ml-3">Mental Wellness Companion</span>
             </a>
             <a href="#" class="menu-item active flex items-center px-6 py-3 text-gray-600" data-section="profile" id="ProfileItem">
-                <img src="images/Vector.svg" alt="Mental Wellness Companion" class="w-5 h-5">
+                <img src="images/profile.svg" alt="Mental Wellness Companion" class="w-4 h-4">
                 <span class="menu-text ml-3">Profile</span>
             </a>
         </nav>
-         <!-- User Profile and Logout Section -->
-         <div class="absolute bottom-0 w-full border-t">
-             <!-- Hidden file input -->
-             <input type="file" id="fileInput" accept="image/*" style="display: none;">
-
-<script>
-    
-    document.getElementById('profile-upload').addEventListener('change', function () {
-    const selectedFile = this.files[0];
-    if (!selectedFile) return;
-
-    const confirmation = confirm('Are you sure you want to change your profile picture?');
-    if (!confirmation) {
-        this.value = ''; 
-        return;
-    }
-
-    const formData = new FormData();
-    formData.append('profileImage', selectedFile);
-
-    fetch('stud_editprofile.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data.success) {
-            document.getElementById('student-image').src = data.newImagePath;
-            alert(data.message);
-        } else {
-            alert('Error: ' + data.message);
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('An unexpected error occurred');
-    });
-});
-</script>
+        <div class="absolute bottom-0 w-full border-t">
             <!-- Logout -->
             <a href="landingpage.html" class="menu-item flex items-center px-6 py-4 text-red-500 hover:text-red-700">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -152,23 +163,29 @@ include("auth.php");
     </div>
     <div class="pl-64">
 
-    <div class="bg-white rounded-lg shadow-md p-6 mb-8" style="width: 1200px; margin-left: 30px; margin-top: 30px">
-                <div class="flex items-center">
-                    <div class="relative">
-                    <img id="student-image" src="<?php echo isset($_SESSION['profile_image']) ? htmlspecialchars($_SESSION['profile_image']) : '/api/placeholder/100/100'; ?>" alt="Profile Picture" class="w-24 h-24 rounded-full object-cover">
-                <label for="profile-upload" class="absolute bottom-0 right-0 bg-blue-500 rounded-full p-2 cursor-pointer hover:bg-blue-600">
-                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                            </svg>
-                        </label>
-                        <input type="file" id="profile-upload" class="hidden" accept="image/*">
-                    </div>
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8" style="width: 1200px; margin-left: 13px; margin-top: 30px">
+    <div class="flex items-center">
+    <div class="relative">
+         <img src="<?php echo htmlspecialchars($profileImage); ?>" alt="Profile Picture" 
+         class="w-24 h-24 rounded-full object-cover" id="profileImage">
+    <label for="fileInput" class="absolute bottom-0 right-0 bg-blue-500 rounded-full p-2 cursor-pointer hover:bg-blue-600">
+        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+        </svg>
+    </label>
+    <input type="file" 
+           id="fileInput" 
+           class="hidden" 
+           accept="image/*">
+</div>
                     <div class="ml-6">
-                    <h2 class="text-2xl font-bold"><?php echo htmlspecialchars($fullName); ?></h2>
-                    <p class="text-gray-600">Department: <?php echo htmlspecialchars($Department); ?></p>
+                    <h2 class="text-2xl font-bold"><?php echo $fullName; ?></h2>
+                    <p class="text-gray-600">Department: <?php echo $Department; ?></p>
                     </div>
                 </div>
             </div>
+
+
     <div class="p-8 ml-4">
         <!-- Header -->
         <div class="mb-6 ">
@@ -189,16 +206,22 @@ include("auth.php");
                 <option value="Friday">Friday</option>
             </select>
         </div>
+        
+
         <div class="w-full md:w-auto">
             <input type="time" name="start_time" required 
-                   min="07:30" max="17:00"
+                   min="07:30" max="17:00" 
                    class="w-full md:w-40 p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
         </div>
+        
         <div class="w-full md:w-auto">
             <input type="time" name="end_time" required 
                    min="07:30" max="17:00"
                    class="w-full md:w-40 p-2 border rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
         </div>
+        
+
+
         <div class="w-full md:w-auto">
             <button type="submit" class="w-full md:w-auto bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
                 Add Time Slot
@@ -384,6 +407,77 @@ async function deleteTimeSlot(id) {
 document.addEventListener('DOMContentLoaded', loadTimeSlots);
 </script>
 <script src="sidebarnav.js"></script>
+
+<script>
+                // Profile Image Handler
+document.addEventListener('DOMContentLoaded', function() {
+    const fileInput = document.getElementById('fileInput');
+    const profileImage = document.getElementById('profileImage');
+    
+    // Initial cache-busting for the profile image
+    if (profileImage && profileImage.src.indexOf('blueuser.svg') === -1) {
+        profileImage.src = profileImage.src + '?t=' + new Date().getTime();
+    }
+    
+    if (fileInput && profileImage) {
+        fileInput.addEventListener('change', async function() {
+            const selectedFile = this.files[0];
+            if (!selectedFile) return;
+            
+            const confirmation = confirm('Are you sure you want to change your profile picture?');
+            if (!confirmation) {
+                this.value = '';
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('profileImage', selectedFile);
+            
+            // Show loading state
+            profileImage.style.opacity = '0.5';
+            
+            try {
+                const response = await fetch('stud_details.php', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Update image with cache-busting
+                    const newImageUrl = `${data.newImagePath}?t=${new Date().getTime()}`;
+                    profileImage.src = newImageUrl;
+                    
+                    // Update session
+                    await fetch('update_session.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            profile_image: data.newImagePath
+                        })
+                    });
+                    
+                    alert('Profile image updated successfully!');
+                } else {
+                    throw new Error(data.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error updating profile image: ' + error.message);
+            } finally {
+                profileImage.style.opacity = '1';
+                fileInput.value = ''; // Reset file input
+            }
+        });
+    } else {
+        console.error('Required elements not found. Check your HTML IDs.');
+    }
+});
+            </script>
     </div>
     </div>
 </body>

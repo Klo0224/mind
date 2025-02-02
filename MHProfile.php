@@ -155,7 +155,7 @@
                 <span class="menu-text ml-3">Mental Wellness Companion</span>
             </a>
             <a href="#" class="menu-item flex items-center px-6 py-3 text-gray-600" data-section="profile" id="ProfileItem">
-                <img src="images/Vector.svg" alt="Profile" class="w-5 h-5">
+                <img src="images/profile.svg" alt="Mental Wellness Companion" class="w-4 h-4">
                 <span class="menu-text ml-3">Profile</span>
             </a>
         </nav>

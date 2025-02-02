@@ -172,7 +172,7 @@
                 <span class="menu-text ml-3">Mental Wellness Companion</span>
             </a>
             <a href="#" class="menu-item flex items-center px-6 py-3 text-gray-600" data-section="profile" id="ProfileItem">
-                <img src="images/Vector.svg" alt="Mental Wellness Companion" class="w-5 h-5">
+            <img src="images/profile.svg" alt="Mental Wellness Companion" class="w-4 h-4">
                 <span class="menu-text ml-3">Profile</span>
             </a>
             
@@ -182,7 +182,8 @@
         <div class="absolute bottom-0 w-full border-t">
             <!-- User Profile -->
             <a href="#" class="menu-item flex items-center px-6 py-4 text-gray-600">
-                <span class="menu-text ml-8"><?php echo htmlspecialchars($fullName); ?></span>
+            <img src="<?php echo htmlspecialchars($profileImage); ?>" alt="Profile Image" class="w-8 h-8 rounded-full">
+                <span class="menu-text ml-3"><?php echo htmlspecialchars($fullName); ?></span>
             </a>
 
             <!-- Logout -->

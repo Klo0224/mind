@@ -1,18 +1,24 @@
 <?php 
+session_start();
 include 'connect.php';
+
+// For debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
 function isValidEmail($email) {
     return filter_var($email, FILTER_VALIDATE_EMAIL) && preg_match('/@usl\.edu\.ph$/', $email);
 }
 
+// Registration Logic
 if(isset($_POST['signUp'])){
-    $firstName = $_POST['firstName'];
-    $lastName = $_POST['lastName'];
-    $email = $_POST['email'];
-    $idnum = $_POST['idnum'];  
-    $course = $_POST['course']; 
-    $year = $_POST['year'];  
-    $dept = $_POST['dept'];  
+    $firstName = trim(htmlspecialchars($_POST['firstName']));
+    $lastName = trim(htmlspecialchars($_POST['lastName']));
+    $email = trim(strtolower($_POST['email']));
+    $idnum = trim(htmlspecialchars($_POST['idnum']));
+    $course = trim(htmlspecialchars($_POST['course']));
+    $year = trim(htmlspecialchars($_POST['year']));
+    $dept = trim(htmlspecialchars($_POST['dept']));
     $password = $_POST['password'];
     $hashedPassword = md5($password);
 
@@ -22,9 +28,11 @@ if(isset($_POST['signUp'])){
         exit();
     }
 
-    // Check if the email already exists
-    $checkEmail = "SELECT * FROM users WHERE email='$email'";
-    $result = $conn->query($checkEmail);
+    // Check if the email already exists using prepared statement
+    $stmt = $conn->prepare("SELECT * FROM users WHERE email = ?");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
     if($result->num_rows > 0){
         echo "<script type='text/javascript'>
@@ -32,10 +40,11 @@ if(isset($_POST['signUp'])){
             window.location.href = 'Login.html';
             </script>";
     } else {
-        $insertQuery = "INSERT INTO users (Student_id, firstName, lastName, email, password, Course, Year, Department)
-                        VALUES ('$idnum', '$firstName', '$lastName', '$email', '$hashedPassword', '$course', '$year', '$dept')";
+        // Use prepared statement for insertion
+        $insertStmt = $conn->prepare("INSERT INTO users (Student_id, firstName, lastName, email, password, Course, Year, Department, profile_image) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'images/blueuser.svg')");
+        $insertStmt->bind_param("ssssssss", $idnum, $firstName, $lastName, $email, $hashedPassword, $course, $year, $dept);
         
-        if($conn->query($insertQuery) === TRUE){
+        if($insertStmt->execute()){
             echo "<script type='text/javascript'>
                 alert('Registration successful!');
                 window.location.href = 'Login.html';
@@ -49,7 +58,7 @@ if(isset($_POST['signUp'])){
 
 // Login Logic
 if(isset($_POST['signIn'])){
-    $email = $_POST['email'];
+    $email = trim(strtolower($_POST['email']));
     $password = $_POST['password'];
     $hashedPassword = md5($password);
 
@@ -59,13 +68,27 @@ if(isset($_POST['signIn'])){
         exit();
     }
 
-    $sql = "SELECT * FROM users WHERE email='$email' AND password='$hashedPassword'";
-    $result = $conn->query($sql);
+    // Use prepared statement for login
+    $stmt = $conn->prepare("SELECT * FROM users WHERE email = ? AND password = ?");
+    $stmt->bind_param("ss", $email, $hashedPassword);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
     if($result->num_rows > 0){
-        session_start();
-        $row = $result->fetch_assoc();
-        $_SESSION['email'] = $row['email'];
+        $user = $result->fetch_assoc();
+        
+        // Set all necessary session variables
+        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['email'] = $user['email'];
+        $_SESSION['firstName'] = $user['firstName'];
+        $_SESSION['lastName'] = $user['lastName'];
+        $_SESSION['Department'] = $user['Department'];
+        $_SESSION['profile_image'] = $user['profile_image'] ?: 'images/blueuser.svg';
+        $_SESSION['isLoggedIn'] = true;
+
+        // Log successful login
+        error_log("Successful login for user: " . $user['email']);
+        
         echo "<script type='text/javascript'>
             window.location.href = 'gracefulThread.php';
             </script>";
@@ -77,4 +100,6 @@ if(isset($_POST['signIn'])){
             </script>";
     }
 }
+
+$conn->close();
 ?>

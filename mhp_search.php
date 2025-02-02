@@ -30,15 +30,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['query'])) {
         u.Year,
         ts.day_of_week,
         ts.start_time,
-        ts.end_time
+        ts.end_time,
+        pr.severity AS PhResult
     FROM Users u
-    LEFT JOIN time_slots ts ON u.Student_id = ts.user_id
+    LEFT JOIN time_slots ts ON u.id = ts.user_id
+    LEFT JOIN phq9_responses pr ON u.id = pr.user_id
     WHERE 
         u.Student_id LIKE '%$query%' OR
         u.firstName LIKE '%$query%' OR
         u.lastName LIKE '%$query%'
-";
-
+    ";
 
     $result = $conn->query($sql);
 
@@ -55,9 +56,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['query'])) {
                     'Department' => $row['Department'],  // Department
                     'Course' => $row['Course'],
                     'Year' => $row['Year'],
+                    'PhResult' => $row['PhResult'] ?: 'Not Available', // new1
                     'time_slots' => []
+
                 ];
             }
+            $students[$userId]['PhResult'] = $row['PhResult'] ? $row['PhResult'] : 'Not Available';
 
             if ($row['day_of_week']) {
                 $students[$userId]['time_slots'][] = [
@@ -66,6 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['query'])) {
                     'end_time' => $row['end_time']
                 ];
             }
+            
         }
     }
 

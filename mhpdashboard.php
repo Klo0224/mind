@@ -1,22 +1,36 @@
 <?php
-include("auth_mhp.php");
+include("mhp_connection.php");
 
-// // Fetch PHQ9 severity result
-// $Student_id = $_GET['Student_id'];
-// $query = "SELECT severity FROM phq9_responses WHERE user_id = ? ORDER BY response_date DESC LIMIT 1";
-// $stmt = $conn->prepare($query);
-// $stmt->bind_param("i", $Student_id);
-// $stmt->execute();
-// $result = $stmt->get_result();
+// Ensure session has the MHP ID
+if (!isset($_SESSION['mhp_id'])) {
+    die("MHP session ID is not set. Please log in."); // Or redirect to the login page
+}
 
-// $phq9_result = 'No data available';
-// if ($result->num_rows > 0) {
-//     $row = $result->fetch_assoc();
-//     $phq9_result = $row['severity'];
-// }
+$conn = new mysqli("localhost", "root", "", "_Mindsoothe");
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
 
-// $conn->close();
+// Get the MHP ID from session
+$mhp_id = $_SESSION['mhp_id'];
+
+// Fetch the profile image path for the logged-in MHP
+$counselorProfileImage = 'images/blueuser.svg'; // Default image
+$stmt = $conn->prepare("SELECT profile_image FROM mhp WHERE id = ?");
+$stmt->bind_param("i", $mhp_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result->num_rows > 0) {
+    $row = $result->fetch_assoc();
+    $counselorProfileImage = !empty($row['profile_image']) ? $row['profile_image'] : $counselorProfileImage;
+}
+
+$stmt->close();
+$conn->close();
 ?>
+
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -62,6 +76,18 @@ include("auth_mhp.php");
         .modal.active {
             display: flex;
         }
+        .profile-upload-container {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .upload-icon {
+            transition: all 0.3s ease;
+        }
+        
+        .upload-icon:hover {
+            transform: scale(1.1);
+        }
     </style>
 </head>
 <body class="bg-gray-100">
@@ -70,7 +96,7 @@ include("auth_mhp.php");
         <!-- Logo Section -->
         <div class="flex items-center p-6 border-b">
             <div class="w-15 h-10 rounded-full flex items-center justify-center">
-                <img src="uploads/Mindsoothe(2).svg" alt="Mindsoothe Logo">
+                <img src="images/Mindsoothe(2).svg" alt="Mindsoothe Logo">
             </div>
         </div>
 
@@ -123,45 +149,71 @@ include("auth_mhp.php");
                     </div>
                 </div>
             </div> -->
+
             <div class="bg-white rounded-lg shadow-md p-6 mb-8" style="width: 1200px; margin-left: 13px; margin-top: 30px">
-                <div class="flex items-center">
-                    <div class="relative">
-                       
-                        <img id="counselor-image" src="<?php echo $counselorProfileImage; ?>" alt="Profile Picture" class="w-24 h-24 rounded-full object-cover">
-                        <label for="profile-upload" class="absolute bottom-0 right-0 bg-blue-500 rounded-full p-2 cursor-pointer hover:bg-blue-600">
-                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                            </svg>
-                        </label>
-                        <input type="file" id="profile-upload" class="hidden" accept="image/*">
-                    </div>
-                    <div class="ml-6">
-                    <h2 class="text-2xl font-bold"><?php echo htmlspecialchars($fullname); ?></h2>
-                    <p class="text-gray-600">Department: <?php echo htmlspecialchars($department); ?></p>
-                    </div>
-                </div>
-            </div>
+    <div class="flex items-center">
+        <div class="relative">
+        <img id="counselor-image" 
+             src="<?php echo htmlspecialchars($counselorProfileImage); ?>" 
+             alt="Profile Picture" 
+             class="w-24 h-24 rounded-full object-cover">
+        <label for="profile-upload" 
+               class="absolute bottom-0 right-0 bg-blue-500 rounded-full p-2 cursor-pointer hover:bg-blue-600 upload-icon">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+            </svg>
+        </label>
+        <input type="file" 
+               id="profile-upload" 
+               class="hidden" 
+               accept="image/*">
+    </div>
+        <div class="ml-6">
+    <h2 class="text-2xl font-bold"><?php echo $fullName; ?></h2>
+    <p class="text-gray-600">Department: <?php echo $department; ?></p>
+</div>
+    </div>
+</div>
+
+
+
 
             <script>
         document.getElementById('profile-upload').addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            const formData = new FormData();
-            formData.append('profile_image', file);
-
-            fetch('mhp_upload_profile.php', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    document.getElementById('counselor-image').src = data.filepath;
-                } else {
-                    alert('Failed to upload image.');
-                }
-            })
-            .catch(error => console.error('Error:', error));
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    console.log('Session check...');
+    
+    // Add debug request to check session
+    fetch('check_session.php')
+        .then(response => response.json())
+        .then(data => {
+            console.log('Session status:', data);
         });
+    
+    const formData = new FormData();
+    formData.append('profile_image', file);
+    
+    fetch('mhp_upload_profile.php', {
+    method: 'POST',
+    body: formData
+})
+.then(response => response.json())
+.then(data => {
+    if (data.success) {
+        document.getElementById('counselor-image').src = 'http://localhost/testers/' + data.filepath + '?t=' + new Date().getTime();
+    } else {
+        console.error('Upload error:', data.error);
+        alert(data.error || 'Failed to upload image.');
+    }
+})
+.catch(error => {
+    console.error('Error:', error);
+    alert('An error occurred while uploading the image.');
+});
+
+});
     </script>
 
             <!-- Search Section -->
@@ -188,10 +240,7 @@ include("auth_mhp.php");
                 <!-- Student results will be dynamically inserted here -->
             </div>
 
-            
-
             <script>
-
                 // Function to handle Enter key press
                 function handleKeyPress(event) {
                     console.log("Key pressed:", event.key); // Debugging line
@@ -253,7 +302,7 @@ include("auth_mhp.php");
                                             <p>Course: ${student.Course}</p>
                                             <p>Year: ${student.Year}</p>
                                             <p>Department: ${student.Department}</p>
-                                            <p>PHQ9 Result: <?php echo htmlspecialchars($phq9_result); ?></p>
+                                            <p>PHQ9 Result: ${student.PhResult}</p>
                                         </div>
 
                                         <!-- Right Section: Vacant Time -->

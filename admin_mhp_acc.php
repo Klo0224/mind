@@ -1,84 +1,122 @@
-
 <?php
 require_once 'connect.php';
 
 function addCounselor($fname, $lname, $email, $department) {
     global $conn;
     
-    // Sanitize input data to prevent SQL injection
-    $fname = mysqli_real_escape_string($conn, $fname);
-    $lname = mysqli_real_escape_string($conn, $lname);
-    $email = mysqli_real_escape_string($conn, $email);
-    $department = mysqli_real_escape_string($conn, $department);
-
-    $defaultPassword = md5('123');
-
-    // Check if the email already exists
-    $checkQuery = "SELECT email FROM MHP WHERE email = '$email'";
-    $result = mysqli_query($conn, $checkQuery);
-
-    if (mysqli_num_rows($result) > 0) {
-        return "error_email_exists";  // Return error if email exists
+    // Use prepared statements to prevent SQL injection
+    $checkStmt = $conn->prepare("SELECT email FROM MHP WHERE email = ?");
+    $checkStmt->bind_param("s", $email);
+    $checkStmt->execute();
+    $result = $checkStmt->get_result();
+    
+    if ($result->num_rows > 0) {
+        return [
+            'status' => 'error',
+            'message' => 'Email already exists',
+            'alert_type' => 'error'
+        ];
     }
-
-    // Insert new counselor if email doesn't exist
-    $query = "INSERT INTO MHP (fname, lname, email, department, password) 
-              VALUES ('$fname','$lname', '$email', '$department', '$defaultPassword')";
-
-    if (mysqli_query($conn, $query)) {
-        return "success";  // Return success message
+    
+    // If email doesn't exist, proceed with insertion
+    $defaultPassword = md5('123'); // Note: Consider using password_hash() instead of md5
+    
+    $insertStmt = $conn->prepare("INSERT INTO MHP (fname, lname, email, department, password) VALUES (?, ?, ?, ?, ?)");
+    $insertStmt->bind_param("sssss", $fname, $lname, $email, $department, $defaultPassword);
+    
+    if ($insertStmt->execute()) {
+        return [
+            'status' => 'success',
+            'message' => 'Counselor added successfully',
+            'alert_type' => 'success'
+        ];
     } else {
-        return "error";  // Return error message
+        return [
+            'status' => 'error',
+            'message' => 'Failed to add counselor',
+            'alert_type' => 'error'
+        ];
     }
 }
 
-
-
 function getAllCounselors() {
     global $conn;
-
-    $query = "SELECT * FROM MHP ORDER BY created_at DESC";
-    $result = mysqli_query($conn, $query);
-
+    
+    $stmt = $conn->prepare("SELECT * FROM MHP ORDER BY created_at DESC");
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
     $counselors = [];
-    while ($row = mysqli_fetch_assoc($result)) {
+    while ($row = $result->fetch_assoc()) {
         $counselors[] = $row;
     }
-
+    
     return $counselors;
 }
 
 function getCounselorById($id) {
     global $conn;
     
-    $id = mysqli_real_escape_string($conn, $id);
-    $query = "SELECT * FROM MHP WHERE id = '$id'";
-    $result = mysqli_query($conn, $query);
+    $stmt = $conn->prepare("SELECT * FROM MHP WHERE id = ?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
     
-    return mysqli_fetch_assoc($result);
+    return $stmt->get_result()->fetch_assoc();
 }
 
 function updateCounselor($id, $fname, $lname, $email, $department) {
     global $conn;
     
-    $id = mysqli_real_escape_string($conn, $id);
-    $fname = mysqli_real_escape_string($conn, $fname);
-    $lname = mysqli_real_escape_string($conn, $lname);
-    $email = mysqli_real_escape_string($conn, $email);
-    $department = mysqli_real_escape_string($conn, $department);
+    // First check if email exists for other counselors
+    $checkStmt = $conn->prepare("SELECT id FROM MHP WHERE email = ? AND id != ?");
+    $checkStmt->bind_param("si", $email, $id);
+    $checkStmt->execute();
+    $result = $checkStmt->get_result();
     
-    // $query = "UPDATE MHP SET fname = '$fname' '$lname', email = '$email', department = '$department' WHERE id = '$id'";
-    $query = "UPDATE MHP SET fname = '$fname', lname= '$lname', email = '$email', department = '$department' WHERE id = '$id'";
+    if ($result->num_rows > 0) {
+        return [
+            'status' => 'error',
+            'message' => 'Email already exists for another counselor',
+            'alert_type' => 'error'
+        ];
+    }
     
-    return mysqli_query($conn, $query);
+    $updateStmt = $conn->prepare("UPDATE MHP SET fname = ?, lname = ?, email = ?, department = ? WHERE id = ?");
+    $updateStmt->bind_param("ssssi", $fname, $lname, $email, $department, $id);
+    
+    if ($updateStmt->execute()) {
+        return [
+            'status' => 'success',
+            'message' => 'Counselor updated successfully',
+            'alert_type' => 'success'
+        ];
+    } else {
+        return [
+            'status' => 'error',
+            'message' => 'Failed to update counselor',
+            'alert_type' => 'error'
+        ];
+    }
 }
 
 function deleteCounselor($id) {
     global $conn;
     
-    $id = mysqli_real_escape_string($conn, $id);
-    $query = "DELETE FROM MHP WHERE id = '$id'";
+    $stmt = $conn->prepare("DELETE FROM MHP WHERE id = ?");
+    $stmt->bind_param("i", $id);
     
-    return mysqli_query($conn, $query);
+    if ($stmt->execute()) {
+        return [
+            'status' => 'success',
+            'message' => 'Counselor deleted successfully',
+            'alert_type' => 'success'
+        ];
+    } else {
+        return [
+            'status' => 'error',
+            'message' => 'Failed to delete counselor',
+            'alert_type' => 'error'
+        ];
+    }
 }
 ?>

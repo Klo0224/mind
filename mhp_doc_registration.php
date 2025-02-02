@@ -1,47 +1,44 @@
 <?php
-  session_start();
-  // Database connection
-  include("connect.php");
-  $message = '';
-// Login process
+// login.php
+include("connect.php");
+
+session_start();
+$message = '';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['signIn'])) {
-  $email = $_POST['email'];
-  $password = $_POST['password']; // Plain text password entered by the user
-  $hashedPassword = md5($password); // Hash the password using md5()
-
-  $sql = "SELECT * FROM MHP WHERE email = ?";
-  $stmt = $conn->prepare($sql);
-  $stmt->bind_param("s", $email);
-  $stmt->execute();
-  $result = $stmt->get_result();
-
-  if ($result->num_rows === 1) {
-      $doctor = $result->fetch_assoc();
-      // Compare the md5 hashed password
-      if ($hashedPassword === $doctor['password']) {
-          // Start a session and store user information
-          session_start();
-          $_SESSION['doctor_id'] = $doctor['id'];
-          $_SESSION['doctor_first_name'] = $doctor['firstName'];
-          $_SESSION['doctor_last_name'] = $doctor['lastName'];
-          header("Location: mhpdashboard.php");
-          exit();
-      } else {
-          // Invalid password
-          echo "<script type='text/javascript'>
-                  alert('password.');
-                </script>";
-      }
-  } else {
-      // No user found with the provided email
-      echo "<script type='text/javascript'>
-              alert('Invalid.');
-            </script>";
-  }
+    $email = $_POST['email'];
+    $password = $_POST['password'];
+    $hashedPassword = md5($password);
+    
+    $sql = "SELECT * FROM MHP WHERE email = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    if ($result->num_rows === 1) {
+        $doctor = $result->fetch_assoc();
+        if ($hashedPassword === $doctor['password']) {
+            // Set all necessary session variables
+            $_SESSION['mhp_id'] = $doctor['id']; // Changed from doctor_id to mhp_id
+            $_SESSION['mhp_name'] = $doctor['firstName'] . ' ' . $doctor['lastName'];
+            $_SESSION['counselor-image'] = $doctor['profile_image'] ?? 'images/blueuser.svg';
+            $_SESSION['old_profile_image'] = $doctor['profile_image'] ?? 'images/blueuser.svg';
+            $_SESSION['is_logged_in'] = true;
+            
+            header("Location: mhpdashboard.php");
+            exit();
+        } else {
+            echo "<script type='text/javascript'>
+                    alert('Invalid password.');
+                  </script>";
+        }
+    } else {
+        echo "<script type='text/javascript'>
+                alert('Invalid email.');
+              </script>";
+    }
 }
-
-
-
   // Logout process
   if (isset($_GET['logout'])) {
       session_destroy();
