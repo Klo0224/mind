@@ -166,8 +166,26 @@ $profileImage = getCurrentProfileImage($conn);
     <div class="bg-white rounded-lg shadow-md p-6 mb-8" style="width: 1200px; margin-left: 13px; margin-top: 30px">
     <div class="flex items-center">
     <div class="relative">
+
+<!-- bon -->
+<?php
+// Get the profile image from the database
+$query = $conn->prepare("SELECT profile_image FROM users WHERE email = ?");
+$query->bind_param("s", $_SESSION['email']);
+$query->execute();
+$result = $query->get_result();
+$userData = $result->fetch_assoc();
+
+$profileImage = $userData['profile_image']; // Path to image stored in database
+
+
+?>
+
+<!-- bon -->
+
          <img src="<?php echo htmlspecialchars($profileImage); ?>" alt="Profile Picture" 
          class="w-24 h-24 rounded-full object-cover" id="profileImage">
+
     <label for="fileInput" class="absolute bottom-0 right-0 bg-blue-500 rounded-full p-2 cursor-pointer hover:bg-blue-600">
         <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
