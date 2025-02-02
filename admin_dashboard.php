@@ -2,38 +2,35 @@
 <?php
 require_once 'admin_mhp_acc.php';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'add') {
-    $result = addCounselor($_POST['fname'], $_POST['lname'], $_POST['email'], $_POST['department']);
-
-    if ($result === "error_email_exists") {
-        echo "<script>alert('The email already exists. Please use a different email.');</script>";
-    } elseif ($result === "success") {
-        echo "<script>alert('Counselor added successfully.'); window.location.href='admin_dashboard.php';</script>";
-    } else {
-        echo "<script>alert('Error: Could not add counselor. Please try again.');</script>";
-    }
-}
-$MHP = getAllCounselors();
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
         switch ($_POST['action']) {
             case 'add':
-                addCounselor($_POST['fname'],$_POST['lname'], $_POST['email'], $_POST['department']);
+                $result = addCounselor($_POST['fname'], $_POST['lname'], $_POST['email'], $_POST['department']);
+                if ($result['status'] === 'error' && $result['message'] === 'Email already exists') {
+                    echo "<script>alert('The email already exists. Please use a different email.');</script>";
+                } elseif ($result['status'] === 'success') {
+                    echo "<script>alert('Counselor added successfully.'); window.location.href='admin_dashboard.php';</script>";
+                } else {
+                    echo "<script>alert('Error: Could not add counselor. Please try again.');</script>";
+                }
                 break;
             case 'update':
-                updateCounselor($_POST['id'], $_POST['fname'],$_POST['lname'], $_POST['email'], $_POST['department']);
+                updateCounselor($_POST['id'], $_POST['fname'], $_POST['lname'], $_POST['email'], $_POST['department']);
                 break;
             case 'delete':
                 deleteCounselor($_POST['id']);
                 break;
         }
-        header('Location: admin_dashboard.php');
-        exit;
+        if ($_POST['action'] !== 'add') {
+            header('Location: admin_dashboard.php');
+            exit;
+        }
     }
 }
 
-
+// Add this line to get all counselors
+$MHP = getAllCounselors();
 ?>
 
 <!DOCTYPE html>
