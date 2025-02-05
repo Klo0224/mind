@@ -75,7 +75,14 @@ $MHP = getAllCounselors();
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Department</label>
-                    <input type="text" name="department" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <select name="department" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">Select Department</option>
+                        <option value="SACE">SACE</option>
+                        <option value="SABH">SABH</option>
+                        <option value="SEAS">SEAS</option>
+                        <option value="SHAS">SHAS</option>
+                        <option value="BES">BES</option>
+                    </select>
                 </div>
                 <button type="submit" class="inline-block mt-6 bg-white text-[#1cabe3] font-bold border-2 border-[#1cabe3] py-3 px-6 rounded-lg hover:bg-[#1cabe3] hover:text-white transition duration-300">Add Counselor</button>
             </form>
@@ -157,8 +164,14 @@ $MHP = getAllCounselors();
                 </div>
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700">Department</label>
-                    <input type="text" name="department" id="edit_department" required 
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <select name="department" id="edit_department" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">Select Department</option>
+                        <option value="SACE">SACE</option>
+                        <option value="SABH">SABH</option>
+                        <option value="SEAS">SEAS</option>
+                        <option value="SHAS">SHAS</option>
+                        <option value="BES">BES</option>
+                    </select>
                 </div>
                 <div class="flex justify-end space-x-2">
                     <button type="button" onclick="closeEditModal()" 
@@ -254,4 +267,4 @@ $(document).ready(function() {
 });
     </script>
 </body>
-</html>
+</html> 

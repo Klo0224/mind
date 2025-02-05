@@ -1,9 +1,28 @@
 <?php
 session_start();
-$conn = new mysqli("localhost", "root", "", "_Mindsoothe");
+include("connect.php");
 
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+if (isset($_SESSION['mhp_name']) && isset($_SESSION['is_logged_in']) && isset($_SESSION['mhp_id'])) {
+    $mhp_id = $_SESSION['mhp_id'];
+
+    // Prepare and execute query securely
+    $stmt = $conn->prepare("SELECT fname, lname FROM mhp WHERE id = ?");
+    $stmt->bind_param("i", $mhp_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result && $result->num_rows > 0) {
+        $user = $result->fetch_assoc();
+        $fullName = $user['fname'] . ' ' . $user['lname'];
+    } else {
+        $fullName = "User not found";
+    }
+
+    $stmt->close();
+} else {
+    // Redirect to login page if session variables are not set
+    header("Location: login.php");
+    exit;
 }
 
 // Fetch student details based on the student_id passed in the URL
@@ -15,9 +34,13 @@ if ($student_id) {
     $stmt->execute();
     $result = $stmt->get_result();
     $student = $result->fetch_assoc();
-} else {
+}
+
+else {
     die("Invalid student ID.");
 }
+
+
 $conn->close();
 ?>
 <!DOCTYPE html>
@@ -97,7 +120,7 @@ $conn->close();
             <div class="text-center mb-2 text-sm">
                 <p>Respectfully Yours,</p>
                 <div class="mt-2 inline-block">
-                    <input type="text" id="counselorName" name="counselorName" class="border-b border-black w-36 text-center" required>
+                    <input type="text" id="counselorName" name="counselorName" value="<?php echo htmlspecialchars($fullName); ?>" class="border-b border-black w-36 text-center" required>
                     <p class="text-center">Guidance Counselor</p>
                 </div>
             </div>

@@ -1,22 +1,4 @@
 <?php
-
-// include("auth.php");
-// // Use session profile image if available, otherwise fetch from database
-// $profileImage = isset($_SESSION['profile_image']) ? $_SESSION['profile_image'] : 'images/blueuser.svg';
-
-// // If not in session but user is logged in, fetch from database
-// if (!isset($_SESSION['profile_image']) && isset($_SESSION['email'])) {
-//     $email = $_SESSION['email'];
-//     $query = $conn->prepare("SELECT profile_image FROM users WHERE email = ?");
-//     $query->bind_param("s", $email);
-//     $query->execute();
-//     $result = $query->get_result();
-//     if ($result->num_rows > 0) {
-//         $userData = $result->fetch_assoc();
-//         $profileImage = $userData['profile_image'];
-//         $_SESSION['profile_image'] = $profileImage;
-//     }
-// }
 include("auth.php");
 // Function to get current profile image
 function getCurrentProfileImage($conn) {
@@ -167,7 +149,7 @@ $profileImage = getCurrentProfileImage($conn);
     <div class="flex items-center">
     <div class="relative">
 
-<!-- bon -->
+<!-- profile -->
 <?php
 // Get the profile image from the database
 $query = $conn->prepare("SELECT profile_image FROM users WHERE email = ?");
@@ -181,7 +163,7 @@ $profileImage = $userData['profile_image']; // Path to image stored in database
 
 ?>
 
-<!-- bon -->
+<!-- profile -->
 
          <img src="<?php echo htmlspecialchars($profileImage); ?>" alt="Profile Picture" 
          class="w-24 h-24 rounded-full object-cover" id="profileImage">
@@ -196,10 +178,58 @@ $profileImage = $userData['profile_image']; // Path to image stored in database
            class="hidden" 
            accept="image/*">
 </div>
-                    <div class="ml-6">
-                    <h2 class="text-2xl font-bold"><?php echo $fullName; ?></h2>
-                    <p class="text-gray-600">Department: <?php echo $Department; ?></p>
-                    </div>
+<div class="ml-6">
+    <div class="flex items-center">
+        <h2 class="text-2xl font-bold mr-2"><?php echo $fullName; ?></h2>
+        <button onclick="openEditModal()" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                </svg>
+    </button>
+    </div>
+    <p class="text-gray-600">Department: <?php echo $Department; ?></p>
+    <p class="text-gray-600">Course: <?php echo $Course; ?></p>
+    <p class="text-gray-600">Year: <?php echo $Year; ?></p>
+
+    <!-- Single button to trigger the edit modal -->
+    <!-- <button onclick="openEditModal()" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+        Edit Profile
+    </button> -->
+
+    
+
+</div>
+
+<!-- Edit Modal -->
+<div id="editModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 w-96">
+        <h3 class="text-lg font-semibold mb-4">Edit Profile</h3>
+
+        <!-- Form fields for editing -->
+        <label for="editFirstName" class="block text-gray-700 font-semibold">First Name: </label>
+        <input type="text" id="editFirstName" placeholder="First Name" class="w-full p-2 border rounded mb-2">
+
+        <label for="editLastName" class="block text-gray-700 font-semibold">Last Name: </label>
+        <input type="text" id="editLastName" placeholder="Last Name" class="w-full p-2 border rounded mb-2">
+
+        <label for="editDepartment" class="block text-gray-700 font-semibold">Department: </label>
+        <input type="text" id="editDepartment" placeholder="Department" class="w-full p-2 border rounded mb-4">
+
+        <label for="editCourse" class="block text-gray-700 font-semibold">Course: </label>
+        <input type="text" id="editCourse" placeholder="Course" class="w-full p-2 border rounded mb-2">
+
+        <label for="editYear" class="block text-gray-700 font-semibold">Year: </label>
+        <input type="number" id="editYear" placeholder="Year" class="w-full p-2 border rounded mb-2">
+        
+
+        <!-- Modal buttons -->
+        <div class="flex justify-end gap-2">
+            <button onclick="closeEditModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
+            <button onclick="saveEdit()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Save</button>
+        </div>
+    </div>
+</div>
+
                 </div>
             </div>
 
@@ -496,6 +526,97 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
             </script>
+
+            <!-- new -->
+<?php
+// Assuming user is authenticated and their data is fetched based on the session
+$userId = $_SESSION['user_id']; // Set this properly after login
+
+$query = "SELECT firstName, lastName, Department FROM users WHERE id = ?";
+$stmt = $conn->prepare($query);
+$stmt->bind_param('i', $userId);
+$stmt->execute();
+$result = $stmt->get_result();
+
+if ($result->num_rows === 1) {
+    $user = $result->fetch_assoc();
+    $fullName = $user['firstName'] . ' ' . $user['lastName'];
+    $department = $user['Department'];
+} else {
+    // Handle case where user data is not found
+    $fullName = '';
+    $department = '';
+}
+$stmt->close();
+?>
+
+<!-- new -->
+
+<script>
+function openEditModal() {
+    // Pre-fill the input fields with the current values from PHP variables
+    document.getElementById('editFirstName').value = '<?php echo $fullName ? explode(" ", $fullName)[0] : ""; ?>';
+    document.getElementById('editLastName').value = '<?php echo $fullName ? explode(" ", $fullName)[1] : ""; ?>';
+    document.getElementById('editCourse').value = '<?php echo $Course; ?>';
+    document.getElementById('editYear').value = '<?php echo $Year; ?>';
+    document.getElementById('editDepartment').value = '<?php echo $Department; ?>';
+
+    // Show the modal
+    const modal = document.getElementById('editModal');
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeEditModal() {
+    const modal = document.getElementById('editModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+
+async function saveEdit() {
+    const formData = new FormData();
+
+    const firstName = document.getElementById('editFirstName').value.trim();
+    const lastName = document.getElementById('editLastName').value.trim();
+    const course = document.getElementById('editCourse').value.trim();
+    const year = document.getElementById('editYear').value.trim();
+    const department = document.getElementById('editDepartment').value.trim();
+
+    if (!firstName || !lastName || !course || !year || !department) {
+        alert('Please fill in all fields.');
+        return;
+    }
+
+    formData.append('firstName', firstName);
+    formData.append('lastName', lastName);
+    formData.append('course', course);
+    formData.append('year', year);
+    formData.append('department', department);
+    formData.append('action', 'updateProfile');
+
+    try {
+        const response = await fetch('update_profile.php', {
+            method: 'POST',
+            body: formData
+        });
+
+        const result = await response.text();
+
+        if (response.ok && result.trim() === 'success') {
+            alert('Profile updated successfully.');
+            location.reload(); // Reload the page to reflect changes
+        } else {
+            alert('Failed to update: ' + result);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred while updating.');
+    }
+
+    closeEditModal();
+}
+
+</script>
     </div>
     </div>
 </body>
