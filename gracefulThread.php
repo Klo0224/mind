@@ -1,5 +1,12 @@
 <?php
+session_start();
+        if (!isset($_SESSION['email'])) {
+            header("Location: landingpage.php");
+            exit();
+        }
         include("auth.php");
+
+        
 
         // Text moderation function
         function moderateText($text) {
@@ -187,12 +194,19 @@
             </a>
 
             <!-- Logout -->
-            <a href="landingpage.html" class="menu-item flex items-center px-6 py-4 text-red-500 hover:text-red-700">
+            <!-- <a href="landingpage.html" class="menu-item flex items-center px-6 py-4 text-red-500 hover:text-red-700">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                 </svg>
                 <span class="menu-text ml-3">Logout</span>
-            </a>  
+            </a>   -->
+
+            <a href="logout.php" class="menu-item flex items-center px-6 py-4 text-red-500 hover:text-red-700">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                <span class="menu-text ml-3">Logout</span>
+            </a>
         </div>
     </div>
 

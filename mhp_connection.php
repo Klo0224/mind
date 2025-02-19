@@ -24,7 +24,7 @@ if (isset($_SESSION['mhp_name']) && isset($_SESSION['is_logged_in']) && isset($_
     $stmt->close();
 } else {
     // Redirect to login page if session variables are not set
-    header("Location: login.php");
+    header("Location: landingpage.php");
     exit;
 }
 ?>

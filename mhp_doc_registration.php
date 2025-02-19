@@ -26,7 +26,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['signIn'])) {
             $_SESSION['old_profile_image'] = $doctor['profile_image'] ?? 'images/blueuser.svg';
             $_SESSION['is_logged_in'] = true;
             
-            header("Location: mhpdashboard.php");
+            header("Location: mhp_dashboard.php");
             exit();
         } else {
             echo "<script type='text/javascript'>

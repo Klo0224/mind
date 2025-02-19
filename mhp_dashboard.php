@@ -34,9 +34,6 @@ if ($result->num_rows > 0) {
 $stmt->close();
 $conn->close();
 ?>
-
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -94,7 +91,6 @@ $conn->close();
             transform: scale(1.1);
         }
     </style>
-</head>
 <body class="bg-gray-100">
     <!-- Sidebar -->
     <div class="sidebar fixed top-0 left-0 h-screen bg-white shadow-lg z-10">
@@ -107,13 +103,13 @@ $conn->close();
 
         <!-- Menu Items -->
         <nav class="mt-6">
-            <a href="#" class="menu-item active flex items-center px-6 py-3" data-section="dashboard">
+            <a href="mhp_dashboard.php" class="menu-item active flex items-center px-6 py-3" data-section="dashboard" id="dashboardItem">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                 </svg>
                 <span class="ml-3">Dashboard</span>
             </a>
-            <a href="#" class="menu-item flex items-center px-6 py-3 text-gray-600" data-section="chats">
+            <a href="mhp_chat.php" class="menu-item flex items-center px-6 py-3 text-gray-600" data-section="chats" id="chatItem">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h18a1 1 0 011 1v12a1 1 0 01-1 1H6l-3 3V5a1 1 0 011-1z"/>
                 </svg>
@@ -131,31 +127,11 @@ $conn->close();
             </a>
         </div>
     </div>
-
-    <!-- Main Content -->
+    
     <div class="main-content min-h-screen p-8">
-        <!-- Dashboard Section -->
-        <div id="dashboard-section" class="content-section active">
-            <!-- Counselor Profile -->
-            <!-- <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-                <div class="flex items-center">
-                    <div class="relative">
-                        <img id="counselor-image" src="/api/placeholder/100/100" alt="Profile Picture" class="w-24 h-24 rounded-full object-cover">
-                        <label for="profile-upload" class="absolute bottom-0 right-0 bg-blue-500 rounded-full p-2 cursor-pointer hover:bg-blue-600">
-                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                            </svg>
-                        </label>
-                        <input type="file" id="profile-upload" class="hidden" accept="image/*">
-                    </div>
-                    <div class="ml-6">
-                        <h2 class="text-2xl font-bold">Maloi Ricalde</h2>
-                        <p class="text-gray-600">Department: SACE</p>
-                    </div>
-                </div>
-            </div> -->
-
-            <div class="bg-white rounded-lg shadow-md p-6 mb-8" style="width: 1200px; margin-left: 13px; margin-top: 30px">
+    <div id="dashboard-section" class="section active">
+    <!-- Dashboard content -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-8" style="width: 1200px; margin-left: 13px; margin-top: 30px">
     <div class="flex items-center">
         <div class="relative">
         <img id="counselor-image" 
@@ -177,13 +153,69 @@ $conn->close();
     <h2 class="text-2xl font-bold"><?php echo $fullName; ?></h2>
     <p class="text-gray-600">Department: <?php echo $department; ?></p>
 </div>
-    </div>
 </div>
+</div>
+<!-- Search Section -->
+<div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <div class="flex items-center mb-4">
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        placeholder="Search student..." 
+                        class="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
+                        onkeydown="handleKeyPress(event)"
+                    >
+                    <button onclick="searchStudent()" class="ml-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">Search</button>
+                </div>
+                
+                <!-- Recent Searches Section -->
+                <div id="recent-searches" class="flex flex-wrap gap-2 mt-2">
+                    <!-- Recent search tags will be dynamically added here -->
+                </div>
+            </div>
 
+            <!-- Student Results - Initially Hidden -->
+            <div id="student-results" class="hidden bg-white rounded-lg shadow-md p-6">
+                <!-- Student results will be dynamically inserted here -->
+            </div>
 
+             <!-- Profile Update Confirmation Modal -->
+        <div id="update-modal" class="modal">
+            <div class="m-auto bg-white rounded-lg p-6 max-w-sm">
+                <h3 class="text-lg font-bold mb-4">Update Profile Picture</h3>
+                <p class="mb-6">Are you sure you want to update your profile picture?</p>
+                <div class="flex justify-end space-x-4">
+                    <button onclick="cancelProfileUpdate()" class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400">Cancel</button>
+                    <button onclick="confirmProfileUpdate()" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Confirm</button>
+                </div>
+            </div>
+        </div>
+</div>
+</body>
+<script>
+            // Section switching functionality
+            const menuItems = document.querySelectorAll('.menu-item');
+            const sections = document.querySelectorAll('.section');
+            
+            menuItems.forEach(item => {
+              item.addEventListener('click', function(e) {
+                if (this.getAttribute('data-section')) {
+                  e.preventDefault();
+                  
+                  menuItems.forEach(mi => mi.classList.remove('active'));
+                  sections.forEach(section => section.classList.remove('active'));
+                  
+                  this.classList.add('active');
+                  
+                  const sectionId = this.getAttribute('data-section');
+                  document.getElementById(`${sectionId}-section`).classList.add('active');
+                }
+              });
+            });
+    </script>
+<script src="mhp_sidebar.js"></script>
 
-
-            <script>
+<script>
         document.getElementById('profile-upload').addEventListener('change', function(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -221,31 +253,7 @@ $conn->close();
 });
     </script>
 
-            <!-- Search Section -->
-            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-                <div class="flex items-center mb-4">
-                    <input 
-                        type="text" 
-                        id="searchInput" 
-                        placeholder="Search student..." 
-                        class="flex-1 p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-                        onkeydown="handleKeyPress(event)"
-                    >
-                    <button onclick="searchStudent()" class="ml-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600">Search</button>
-                </div>
-                
-                <!-- Recent Searches Section -->
-                <div id="recent-searches" class="flex flex-wrap gap-2 mt-2">
-                    <!-- Recent search tags will be dynamically added here -->
-                </div>
-            </div>
-
-            <!-- Student Results - Initially Hidden -->
-            <div id="student-results" class="hidden bg-white rounded-lg shadow-md p-6">
-                <!-- Student results will be dynamically inserted here -->
-            </div>
-
-            <script>
+<script>
                 // Function to handle Enter key press
                 function handleKeyPress(event) {
                     console.log("Key pressed:", event.key); // Debugging line
@@ -349,7 +357,7 @@ $conn->close();
                 }
             </script>
 
-            <script>
+<script>
                 // Function to save recent searches
                 function saveRecentSearch(query) {
                     if (!query) return;
@@ -516,32 +524,7 @@ $conn->close();
                 // Initialize recent searches on page load
                 document.addEventListener('DOMContentLoaded', displayRecentSearches);
             </script>
-
-            <!-- Chats Section -->
-            <div id="chats-section" class="content-section">
-                <!-- Chat interface will be added here -->
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <h2 class="text-xl font-bold mb-4">Messages</h2>
-                    <div id="chat-container">
-                        <!-- Chat messages will be dynamically inserted here -->
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Profile Update Confirmation Modal -->
-        <div id="update-modal" class="modal">
-            <div class="m-auto bg-white rounded-lg p-6 max-w-sm">
-                <h3 class="text-lg font-bold mb-4">Update Profile Picture</h3>
-                <p class="mb-6">Are you sure you want to update your profile picture?</p>
-                <div class="flex justify-end space-x-4">
-                    <button onclick="cancelProfileUpdate()" class="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400">Cancel</button>
-                    <button onclick="confirmProfileUpdate()" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Confirm</button>
-                </div>
-            </div>
-        </div>
-
-        <script>
+             <script>
             // Global variables
             let selectedImage = null;
 
@@ -624,7 +607,10 @@ $conn->close();
     function printCallSlip(studentId) {
         window.location.href = `call_slip.php?student_id=${encodeURIComponent(studentId)}`;
     }
-</script>
-    </div>
- </body>
+</script>  
+<script>
+    function openChat(studentId) {
+        window.location.href = `mhp_chat.php?student_id=${encodeURIComponent(studentId)}`;
+    }
+</script>   
 </html>

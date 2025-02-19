@@ -1,5 +1,9 @@
 <!-- index.php -->
 <?php
+ // Prevent browser caching (so back button won't work)
+ header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+ header("Pragma: no-cache");
+ header("Expires: 0");
 require_once 'admin_mhp_acc.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -47,7 +51,7 @@ $MHP = getAllCounselors();
         <!-- Header Section -->
         <div class="flex justify-between items-center mb-6">
     <h1 class="text-3xl font-bold">Guidance Counselor Management</h1>
-    <form method="POST" action="admin_login.php">
+    <form method="POST" action="logout.php">
         <button type="submit" 
                 class="inline-block mt-6 bg-white text-[#1cabe3] font-bold border-2 border-[#1cabe3] py-3 px-6 rounded-lg hover:bg-[#1cabe3] hover:text-white transition duration-300">
             Logout

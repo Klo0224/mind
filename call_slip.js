@@ -26,27 +26,27 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Check allow student
-        const allowStudentCheckbox = document.getElementById('allowStudent');
-        if (!allowStudentCheckbox.checked) {
-            alert('Student must be allowed for counseling.');
-            return false;
-        }
+        // const allowStudentCheckbox = document.getElementById('allowStudent');
+        // if (!allowStudentCheckbox.checked) {
+        //     alert('Student must be allowed for counseling.');
+        //     return false;
+        // }
 
         // Check reasons for counseling
-        const selectedReasons = document.querySelectorAll('input[name="reasons[]"]:checked');
-        if (selectedReasons.length === 0) {
-            alert('Please select at least one reason for counseling.');
-            return false;
-        }
+        // const selectedReasons = document.querySelectorAll('input[name="reasons[]"]:checked');
+        // if (selectedReasons.length === 0) {
+        //     alert('Please select at least one reason for counseling.');
+        //     return false;
+        // }
 
-        // Check "Others" specification if selected
-        const othersCheckbox = document.getElementById('others');
-        const othersSpecify = document.getElementById('othersSpecify');
-        if (othersCheckbox.checked && !othersSpecify.value.trim()) {
-            alert('Please specify details for "Others" reason.');
-            othersSpecify.focus();
-            return false;
-        }
+        // // Check "Others" specification if selected
+        // const othersCheckbox = document.getElementById('others');
+        // const othersSpecify = document.getElementById('othersSpecify');
+        // if (othersCheckbox.checked && !othersSpecify.value.trim()) {
+        //     alert('Please specify details for "Others" reason.');
+        //     othersSpecify.focus();
+        //     return false;
+        // }
 
         return true;
     }
@@ -121,7 +121,7 @@ document.addEventListener('DOMContentLoaded', function() {
             studentName: document.getElementById('studentName').value,
             courseYear: document.getElementById('courseYear').value,
             appointmentTime: document.getElementById('appointmentTime').value,
-            allowStudent: document.getElementById('allowStudent').checked,
+            // allowStudent: document.getElementById('allowStudent').checked,
             reschedule: document.getElementById('reschedule').checked,
             rescheduleReason: document.getElementById('rescheduleReason').value,
             reasons: selectedReasons,
@@ -162,14 +162,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Handle allow student checkbox
-    const allowStudentCheckbox = document.getElementById('allowStudent');
-    allowStudentCheckbox.addEventListener('change', function() {
-        if (this.checked) {
-            rescheduleCheckbox.checked = false;
-            rescheduleReason.disabled = true;
-            rescheduleReason.value = '';
-        }
-    });
+    // const allowStudentCheckbox = document.getElementById('allowStudent');
+    // allowStudentCheckbox.addEventListener('change', function() {
+    //     if (this.checked) {
+    //         rescheduleCheckbox.checked = false;
+    //         rescheduleReason.disabled = true;
+    //         rescheduleReason.value = '';
+    //     }
+    // });
 
     // Optional: Fetch student data if user ID is provided
     const urlParams = new URLSearchParams(window.location.search);

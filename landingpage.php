@@ -1,3 +1,11 @@
+<?php
+// Prevent browser caching (so back button won't work)
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Pragma: no-cache");
+header("Expires: 0");
+
+?>
+
 <!DOCTYPE html>
 <html>
   <head>
@@ -65,23 +73,34 @@
             </div>
 
             <div class="flex items-center space-x-4">
-              <a 
+              <!-- <a 
                 href="mhp_doc_registration.php" 
                 class="text-[#1cabe3] text-lg hover:text-[#1cabe3]/80 transition"
               >
                 Careers
-              </a>
-              <a 
-                href="#" 
+              </a> -->
+              <!-- <a 
+                href="admin_login.php" 
                 class="text-[#1cabe3] text-lg hover:text-[#1cabe3]/80 transition"
               >
-                FAQs
-              </a>
+                Admin
+              </a> -->
+              <a href="mhp_doc_registration.php">
+                <button class="bg-white rounded-lg px-4 py-2 shadow-md hover:bg-gray-100 transition">
+                    <span class="text-[#1cabe3] font-semibold">Guidance</span>
+                </button>
+            </a>
+            
+            <a href="admin_login.php">
+                <button class="bg-white rounded-lg px-4 py-2 shadow-md hover:bg-gray-100 transition">
+                    <span class="text-[#1cabe3] font-semibold">Admin</span>
+                </button>
+            </a>
               <button 
                 onclick="LoginPage()" 
                 class="bg-white rounded-lg px-4 py-2 shadow-md hover:bg-gray-100 transition"
               >
-                <span class="text-[#1cabe3] font-semibold">Login</span>
+                <span class="text-[#1cabe3] font-semibold">Student</span>
               </button>
             </div>
           </div>

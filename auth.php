@@ -1,14 +1,16 @@
 <?php
-session_start();
 include("connect.php");
 
 // Ensure the user is logged in
+if (session_status() == PHP_SESSION_NONE){
+    session_start();
+}
 if (!isset($_SESSION['email'])) {
-    header("Location: Login.html");
+    header("Location: landingpage.php");
     exit();
 }
 // Define $isLoggedIn to true since user is logged in
-$isLoggedIn = true;
+// $isLoggedIn = true;
 // Get the user's information based on their email
 $email = $_SESSION['email'];
 $query = mysqli_query($conn, "SELECT id, firstName, lastName, Course, Year, Department, profile_image FROM Users WHERE email='$email'");
