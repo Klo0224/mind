@@ -1,19 +1,12 @@
 <?php
 session_start();
-
-// Unset all session variables
-$_SESSION = array();
-
-// Destroy the session
+session_unset();
 session_destroy();
 
-// Prevent browser caching (so back button won't work)
-header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: no-cache, no-store, max-age=0, must-revalidate");
+header("Cache-Control: post-check=0, pre-check=0", false);
 header("Pragma: no-cache");
-header("Expires: 0");
 
-
-// Redirect to landing page
 header("Location: landingpage.php");
 exit();
 ?>

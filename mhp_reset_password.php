@@ -19,7 +19,7 @@ if (isset($_POST['reset'])) {
     $email = $_SESSION['email'];
 
     // Update the password in the database
-    $updatePassword = "UPDATE Users SET password='$newPasswordHashed' WHERE email='$email'";
+    $updatePassword = "UPDATE mhp SET password='$newPasswordHashed' WHERE email='$email'";
     if ($conn->query($updatePassword) === TRUE) {
         echo "<script type='text/javascript'>
                 alert('Password has been reset. Please log in.');

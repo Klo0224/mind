@@ -1,6 +1,6 @@
 <?php
-require_once 'connect.php';  // Database connection
-require_once __DIR__ . '/vendor/autoload.php';
+include 'connect.php';
+require 'vendor/autoload.php'; // Only needed if using Composer
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -56,17 +56,16 @@ if (isset($_POST['resetPassword'])) {
     }
 
     // Check if email exists
-    $checkEmail = "SELECT * FROM mhp WHERE email='$email'";
+    $checkEmail = "SELECT * FROM Users WHERE email='$email'";
     $result = $conn->query($checkEmail);
 
     if ($result->num_rows > 0) {
         $otp = rand(100000, 999999); // Generate a 6-digit OTP
-
-        // Store OTP and email in the session 
-        $_SESSION['otp'] = $otp;
-        $_SESSION['email'] = $email;
-        
-        if (sendOTP($email, $otp)) {
+         // Store OTP and email in the session
+         $_SESSION['otp'] = $otp;
+         $_SESSION['email'] = $email;
+ 
+         if (sendOTP($email, $otp)) {
             echo "<script type='text/javascript'>
                     alert('OTP has been sent to your email.');
                     window.location.href = 'mhp_enter_otp.html';
@@ -82,5 +81,5 @@ if (isset($_POST['resetPassword'])) {
                 alert('Email address not found!');
               </script>";
     }
-}
-?>
+ }
+ ?>

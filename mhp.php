@@ -1,9 +1,9 @@
 <?php
-        session_start();
-        if (!isset($_SESSION['email'])) {
-            header("Location: landingpage.php");
-            exit();
-        }
+        // session_start();
+        // if (!isset($_SESSION['email'])) {
+        //     header("Location: landingpage.php");
+        //     exit();
+        // }
 
         include("auth.php");
         

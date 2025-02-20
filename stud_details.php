@@ -55,7 +55,16 @@ try {
     $randomString = bin2hex(random_bytes(8));
     $newFileName = "profile_{$userId}_{$timestamp}_{$randomString}.{$fileExt}";
     $uploadDir = 'uploads/profile_images/';
-    $uploadPath = $uploadDir . $newFileName;
+$newFileName = "profile_{$userId}_{$timestamp}_{$randomString}.{$fileExt}";
+$uploadPath = $uploadDir . $newFileName;
+$absolutePath = $_SERVER['DOCUMENT_ROOT'] . '/' . $uploadPath;
+
+// Add this logging
+error_log("Saving image to database path: {$uploadPath}");
+error_log("Absolute file system path: {$absolutePath}");
+
+
+  
     
     // Create directory if it doesn't exist
     if (!file_exists($uploadDir)) {
@@ -80,9 +89,9 @@ $fullServerPath = $_SERVER['DOCUMENT_ROOT'] . '/' . $uploadPath;
 error_log("Attempting to save file to: " . $fullServerPath);
 error_log("File exists after upload: " . (file_exists($fullServerPath) ? 'Yes' : 'No'));
     
-    // Update database with new image path
-    $updateQuery = $conn->prepare("UPDATE users SET profile_image = ? WHERE id = ?");
-    $updateQuery->bind_param("si", $uploadPath, $userId);
+$updateQuery = $conn->prepare("UPDATE users SET profile_image = ? WHERE id = ?");
+$updateQuery->bind_param("si", $uploadPath, $userId);
+error_log("SQL update with image path: {$uploadPath}");
 
     // Add this debugging query after your update:
 $checkQuery = "SELECT profile_image FROM users WHERE id = '$userId'";
@@ -96,6 +105,14 @@ error_log("Stored path in database: " . $row['profile_image']);
         throw new Exception('Database update failed: ' . $conn->error);
     }
     
+    if ($updateQuery->execute()) {
+        // Set the new image path in the session
+        $_SESSION['profile_image'] = $uploadPath;
+        error_log("Updated session with new image path: {$uploadPath}");
+        
+        // Rest of your code...
+    }
+
     // Delete old profile image only after successful update
     if ($oldImage && $oldImage !== 'images/blueuser.svg' && file_exists($oldImage)) {
         unlink($oldImage);

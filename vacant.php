@@ -1,39 +1,63 @@
 <?php
-session_start();
-if (!isset($_SESSION['email'])) {
-    header("Location: landingpage.php");
-    exit();
-}
+
+// include("auth.php");
+// // Use session profile image if available, otherwise fetch from database
+// $profileImage = isset($_SESSION['profile_image']) ? $_SESSION['profile_image'] : 'images/blueuser.svg';
+
+// // If not in session but user is logged in, fetch from database
+// if (!isset($_SESSION['profile_image']) && isset($_SESSION['email'])) {
+//     $email = $_SESSION['email'];
+//     $query = $conn->prepare("SELECT profile_image FROM users WHERE email = ?");
+//     $query->bind_param("s", $email);
+//     $query->execute();
+//     $result = $query->get_result();
+//     if ($result->num_rows > 0) {
+//         $userData = $result->fetch_assoc();
+//         $profileImage = $userData['profile_image'];
+//         $_SESSION['profile_image'] = $profileImage;
+//     }
+// }
 include("auth.php");
 // Function to get current profile image
 function getCurrentProfileImage($conn) {
-    // Check if profile image is already cached in the session
-    if (isset($_SESSION['profile_image'])) {
+    error_log("Getting profile image - Session status: " . (isset($_SESSION['profile_image']) ? "Set" : "Not set"));
+    
+    // First try getting from session
+    if (isset($_SESSION['profile_image']) && !empty($_SESSION['profile_image'])) {
+        error_log("Returning image from session: " . $_SESSION['profile_image']);
         return $_SESSION['profile_image'];
     }
-
-    // Check if the session has the user email
+    
+    // If not in session, try database
     if (isset($_SESSION['email'])) {
         $email = $_SESSION['email'];
-
-        // Use a prepared statement to fetch the profile image from the users table
+        error_log("Fetching profile image from database for email: {$email}");
+        
         $stmt = $conn->prepare("SELECT profile_image FROM users WHERE email = ?");
         $stmt->bind_param("s", $email);
         $stmt->execute();
         $result = $stmt->get_result();
-
+        
         if ($result->num_rows > 0) {
             $row = $result->fetch_assoc();
-            $profileImage = !empty($row['profile_image']) ? $row['profile_image'] : 'images/blueuser.svg';
-
-            // Cache the result in the session to avoid repeated database calls
-            $_SESSION['profile_image'] = $profileImage;
-
-            return $profileImage;
+            error_log("Database returned profile_image: " . ($row['profile_image'] ? $row['profile_image'] : "NULL"));
+            
+            if (!empty($row['profile_image'])) {
+                // Use the image path exactly as stored in database
+                $profileImage = $row['profile_image'];
+                error_log("Using image from database: {$profileImage}");
+                
+                // Store in session for future use
+                $_SESSION['profile_image'] = $profileImage;
+                return $profileImage;
+            }
+        } else {
+            error_log("No user found in database with email: {$email}");
         }
     }
-
-    // Return default image if no session or database result
+    
+    // If we got here, use default image
+    error_log("Using default profile image");
     return 'images/blueuser.svg';
 }
 
@@ -153,26 +177,14 @@ $profileImage = getCurrentProfileImage($conn);
     <div class="bg-white rounded-lg shadow-md p-6 mb-8" style="width: 1200px; margin-left: 13px; margin-top: 30px">
     <div class="flex items-center">
     <div class="relative">
-
-<!-- profile -->
-<?php
-// Get the profile image from the database
-$query = $conn->prepare("SELECT profile_image FROM users WHERE email = ?");
-$query->bind_param("s", $_SESSION['email']);
-$query->execute();
-$result = $query->get_result();
-$userData = $result->fetch_assoc();
-
-$profileImage = $userData['profile_image']; // Path to image stored in database
-
-
-?>
-
-<!-- profile -->
-
-         <img src="<?php echo htmlspecialchars($profileImage); ?>" alt="Profile Picture" 
-         class="w-24 h-24 rounded-full object-cover" id="profileImage">
-
+    <img src="<?php 
+    // Add cache-busting parameter
+    $imgSrc = $profileImage;
+    if ($imgSrc !== 'images/blueuser.svg') {
+        $imgSrc .= '?v=' . time();
+    }
+    echo htmlspecialchars($imgSrc); 
+?>" alt="Profile Picture" class="w-24 h-24 rounded-full object-cover" id="profileImage">
     <label for="fileInput" class="absolute bottom-0 right-0 bg-blue-500 rounded-full p-2 cursor-pointer hover:bg-blue-600">
         <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
@@ -186,7 +198,7 @@ $profileImage = $userData['profile_image']; // Path to image stored in database
 <div class="ml-6">
     <div class="flex items-center">
         <h2 class="text-2xl font-bold mr-2"><?php echo $fullName; ?></h2>
-        <button onclick="openEditModal()" class="mt-4 px-4 py-2 text-black rounded">
+        <button onclick="openEditModal()" class=class="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                 </svg>
@@ -532,7 +544,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
             </script>
 
-            <!-- new -->
+<!-- new -->
 <?php
 // Assuming user is authenticated and their data is fetched based on the session
 $userId = $_SESSION['user_id']; // Set this properly after login
