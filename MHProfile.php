@@ -139,10 +139,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <img src="images/Vector.svg" alt="Profile" class="w-5 h-5">
                 <span class="menu-text ml-3">Profile</span>
             </a>
-            <a href="#" class="menu-item flex items-center px-6 py-3 text-gray-600" data-section="chat" id="chatItem">
+            <!-- <a href="#" class="menu-item flex items-center px-6 py-3 text-gray-600" data-section="chat" id="chatItem">
                 <img src="images/Vector.svg" alt="Chat" class="w-5 h-5">
                 <span class="menu-text ml-3">Chat</span>
-            </a>
+            </a> -->
         </nav>
 
         <!-- User Profile / Logout at Bottom -->

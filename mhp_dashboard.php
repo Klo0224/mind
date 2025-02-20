@@ -28,7 +28,7 @@ $result = $stmt->get_result();
 
 if ($result->num_rows > 0) {
     $row = $result->fetch_assoc();
-    $counselorProfileImage = !empty($row['profile_image']) ? $row['profile_image'] : $counselorProfileImage;
+    $counselorProfileImage = !empty($row['profile_image']) ? $row['profile_image'] . '?' . time() : 'images/blueuser.svg';
 }
 
 $stmt->close();
@@ -228,7 +228,7 @@ $conn->close();
         .then(data => {
             console.log('Session status:', data);
         });
-    
+
     const formData = new FormData();
     formData.append('profile_image', file);
     
@@ -565,17 +565,80 @@ $conn->close();
                 updateModal.classList.remove('active');
             }
 
-            function confirmProfileUpdate() {
-                if (selectedImage) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        counselorImage.src = e.target.result;
-                        // Here you would typically upload the image to your server
-                    }
-                    reader.readAsDataURL(selectedImage);
-                }
-                updateModal.classList.remove('active');
-            }
+            // Modify the confirmProfileUpdate function in your JavaScript
+// Enhanced profile image update logic
+function confirmProfileUpdate() {
+    if (!selectedImage) {
+        updateModal.classList.remove('active');
+        return;
+    }
+    
+    // Store the current image URL for fallback
+    const originalImageSrc = counselorImage.src;
+    
+    // Show optional loading state (you could add a loading spinner overlay here)
+    // counselorImage.classList.add('loading-filter'); // Add CSS for this if needed
+    
+    const formData = new FormData();
+    formData.append('profile_image', selectedImage);
+    
+    fetch('mhp_upload_profile.php', {
+        method: 'POST',
+        body: formData,
+        credentials: 'same-origin' // Ensure cookies are sent for session validation
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Server returned ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (!data.success) {
+            throw new Error(data.error || 'Unknown server error');
+        }
+        
+        // Create a new temporary hidden image element for preloading
+        const tempImg = document.createElement('img');
+        tempImg.style.display = 'none';
+        document.body.appendChild(tempImg);
+        
+        // Set up event handlers before setting src
+        tempImg.onload = function() {
+            // Update the visible image only after successful load
+            counselorImage.src = this.src;
+            // Remove the temporary element
+            document.body.removeChild(tempImg);
+            // counselorImage.classList.remove('loading-filter');
+            console.log("Image updated successfully!");
+        };
+        
+        tempImg.onerror = function() {
+            console.error("Failed to load new image");
+            alert("Failed to load the new image. Keeping the current one.");
+            document.body.removeChild(tempImg);
+            // counselorImage.classList.remove('loading-filter');
+        };
+        
+        // Force browser to load fresh image by appending timestamp
+        const imageUrl = data.image_url || data.filepath;
+        tempImg.src = imageUrl + '?t=' + Date.now();
+    })
+    .catch(error => {
+        console.error('Error during profile update:', error);
+        alert('Update failed: ' + error.message);
+        // counselorImage.classList.remove('loading-filter');
+    })
+    .finally(() => {
+        // Clean up and close modal
+        selectedImage = null;
+        profileUpload.value = '';
+        updateModal.classList.remove('active');
+    });
+}
+
+            </script>
+            <script>
 
             // Student search functionality
             
