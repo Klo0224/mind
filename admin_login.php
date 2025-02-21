@@ -33,7 +33,22 @@ if ($stmt->affected_rows > 0) {
         $admin = $result->fetch_assoc();
         if(password_verify($password, $admin['password'])) {
             $_SESSION['admin_id'] = $admin['id'];
+
             header("Location: admin_dashboard.php");
+
+            // if($user->role =='admin')
+            // {
+            //     header("Location: admin_dashboard.php");
+            // }
+            // elseif ($user->role =='student')
+            // {
+            //     header("Location: gracefulThread.php");
+            // }
+            // else if($user->role =='guidance')
+            // {
+            //     header("Location: mhp_dashboard.php");
+            // }
+
             exit();
         }
     }
