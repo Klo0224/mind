@@ -54,7 +54,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['signIn'])) {
     <meta charset="UTF-8">
     <title>Doctor Login & Registration</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css">
-    <style>
+    <link rel="stylesheet" href="Login.css">
+  <style>
+    .form-container form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    }
+
+    .form-container input {
+        width: 80%; /* Adjust width to fit the form */
+        margin: 3px 0; /* Add some space between fields */
+    }
+
+  </style>
+    <!-- <style>
       @import url('https://fonts.googleapis.com/css?family=Montserrat:400,800');
 
       * {
@@ -386,7 +401,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['signIn'])) {
       .decor {
         margin-bottom: 50px;
       }
-    </style>
+    </style> -->
   </head>
   <body>
     <div class="container" id="container">
@@ -418,7 +433,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['signIn'])) {
           <input type="email" name="email" placeholder="Email" required/>
           <input type="password" name="password" placeholder="Password" required/>
           <a href="mhp_forgot_password.html">Forgot your password?</a>
-          <button type="submit" name="signIn">Sign In</button>
+          <input type="submit" class="Login" value="Sign In" name="signIn" style="width: 200px;">
+          <input type="button" class="Login" value="Back" onclick="window.location.href='landingpage.php'" style="width: 200px;">
         </form>
       </div>
       <div class="overlay-container">

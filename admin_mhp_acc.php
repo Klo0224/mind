@@ -19,7 +19,7 @@ function addCounselor($fname, $lname, $email, $department) {
     }
     
     // If email doesn't exist, proceed with insertion
-    $defaultPassword = md5('123'); // Note: Consider using password_hash() instead of md5
+    $defaultPassword = md5('12345678'); // Note: Consider using password_hash() instead of md5
     
     $insertStmt = $conn->prepare("INSERT INTO MHP (fname, lname, email, department, password) VALUES (?, ?, ?, ?, ?)");
     $insertStmt->bind_param("sssss", $fname, $lname, $email, $department, $defaultPassword);

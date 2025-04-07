@@ -19,10 +19,12 @@ window.onload = function() {
     } else if (currentPage.includes('vacant.php') && ProfileItem) {
         ProfileItem.classList.add('clicked');
         console.log('Profile marked as clicked'); // Debug log
-    } else if (currentPage.includes('chat.php') && chatItem) {
+    } else if (currentPage.includes('MHProfile.php') && chatItem) {
         chatItem.classList.add('clicked');
         console.log('Profile marked as clicked'); // Debug log
-    } else {
+    } 
+    
+    else {
         console.log('Page not matched or user not logged in'); // Debug log
     }
 
@@ -51,7 +53,7 @@ window.onload = function() {
     if (chatItem) {
         chatItem.addEventListener('click', function() {
             // Navigate to the "Profile" page when clicked
-            window.location.href = 'chat.php';
+            window.location.href = 'MHProfile.php';
         });
     }
 };

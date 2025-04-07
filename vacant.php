@@ -161,6 +161,11 @@ $profileImage = getCurrentProfileImage($conn);
                 <img src="images/profile.svg" alt="Mental Wellness Companion" class="w-4 h-4">
                 <span class="menu-text ml-3">Profile</span>
             </a>
+            <a href="#" class="menu-item flex items-center px-6 py-3 text-gray-600" data-section="chat" id="ChatItem">
+            <img src="images/profile.svg" alt="Mental Wellness Companion" class="w-4 h-4">
+                <span class="menu-text ml-3">Chat</span>
+            </a>
+            
         </nav>
         <div class="absolute bottom-0 w-full border-t">
             <!-- Logout -->

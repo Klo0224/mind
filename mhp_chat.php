@@ -1,4 +1,8 @@
 <?php
+// Enable error reporting for debugging
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 // Prevent browser caching
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Pragma: no-cache");
@@ -6,12 +10,6 @@ header("Expires: 0");
 
 session_start();
 require_once("connect.php");
-
-// Secure error logging
-error_reporting(E_ALL);
-ini_set('log_errors', 1);
-ini_set('display_errors', 0);
-ini_set('error_log', 'error_log.log');
 
 // Authentication Check
 if (!isset($_SESSION['mhp_id'])) {
@@ -21,63 +19,45 @@ if (!isset($_SESSION['mhp_id'])) {
 $mhp_id = (int) $_SESSION['mhp_id'];
 
 // Helper function to send JSON response
-function sendJsonResponse($data) {
+function sendJsonResponse($data, $status_code = 200) {
+    http_response_code($status_code);
     header('Content-Type: application/json');
     echo json_encode($data);
     exit();
 }
 
-// Fetch Doctor Name
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['fetchDoctorName'])) {
-    $sql = "SELECT fname, lname FROM MHP WHERE id = ?";
-    if ($stmt = $conn->prepare($sql)) {
-        $stmt->bind_param("i", $mhp_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $doctor = $result->fetch_assoc();
-        sendJsonResponse($doctor ?: ['error' => 'Doctor not found']);
-    }
-}
-
-// Fetch Messages for a Specific Student
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['fetchMessages'], $_GET['student_id'])) {
-    $student_id = (int) $_GET['student_id'];
-    $query = "SELECT * FROM Messages WHERE student_id = ? AND mhp_id = ? ORDER BY timestamp ASC LIMIT 50";
-    
-    if ($stmt = $conn->prepare($query)) {
-        $stmt->bind_param("ii", $student_id, $mhp_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $messages = $result->fetch_all(MYSQLI_ASSOC);
-        sendJsonResponse($messages);
-    }
-}
-
-// Send Message
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $student_id = isset($_POST['receiver_id']) ? (int) $_POST['receiver_id'] : 0;
-    $message = isset($_POST['message']) ? trim($_POST['message']) : '';
-    
-    if ($student_id <= 0 || empty($message)) {
-        sendJsonResponse(["error" => "Invalid input"]);
-    }
-    
-    $sender_type = 'MHP';
-    $receiver_type = 'student';
-    
-    $query = "INSERT INTO Messages (student_id, mhp_id, sender_type, receiver_type, message) VALUES (?, ?, ?, ?, ?)";
-    
-    if ($stmt = $conn->prepare($query)) {
-        $stmt->bind_param("iisss", $student_id, $mhp_id, $sender_type, $receiver_type, $message);
-        if ($stmt->execute()) {
-            sendJsonResponse(["success" => "Message sent successfully"]);
+// API Endpoints
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    // Fetch Doctor Name
+    if (isset($_GET['fetchDoctorName'])) {
+        $sql = "SELECT fname, lname FROM MHP WHERE id = ?";
+        if ($stmt = $conn->prepare($sql)) {
+            $stmt->bind_param("i", $mhp_id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $doctor = $result->fetch_assoc();
+            sendJsonResponse($doctor ?: ['error' => 'Doctor not found']);
         } else {
-            sendJsonResponse(["error" => "Failed to send message: " . $stmt->error]);
+            sendJsonResponse(['error' => 'Database error'], 500);
+        }
+    }
+    
+    // Fetch Messages
+    if (isset($_GET['fetchMessages'], $_GET['student_id'])) {
+        $student_id = (int) $_GET['student_id'];
+        $query = "SELECT * FROM Messages WHERE student_id = ? AND mhp_id = ? ORDER BY timestamp ASC";
+        
+        if ($stmt = $conn->prepare($query)) {
+            $stmt->bind_param("ii", $student_id, $mhp_id);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $messages = $result->fetch_all(MYSQLI_ASSOC);
+            sendJsonResponse($messages);
+        } else {
+            sendJsonResponse(['error' => 'Failed to fetch messages'], 500);
         }
     }
 }
-
-$conn->close();
 ?>
 
 <!DOCTYPE html>
@@ -107,37 +87,40 @@ $conn->close();
             background-color: #eff6ff;
             border-right: 4px solid #1cabe3;
         }
-        .content-section {
+        .message-container {
+            display: flex;
+            flex-direction: column;
+        }
+        .message-sent {
+            align-self: flex-start;
+            background-color: #3b82f6;
+            color: white;
+            border-radius: 1rem 1rem 1rem 0;
+            max-width: 70%;
+            margin-bottom: 0.5rem;
+        }
+        .message-received {
+            align-self: flex-end;
+            background-color: #e5e7eb;
+            color: #1f2937;
+            border-radius: 1rem 1rem 0 1rem;
+            max-width: 70%;
+            margin-bottom: 0.5rem;
+        }
+        .section {
             display: none;
         }
-        .content-section.active {
+        .section.active {
             display: block;
         }
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-        }
-        .modal.active {
+        #chatMessages {
             display: flex;
-        }
-        .profile-upload-container {
-            position: relative;
-            display: inline-block;
-        }
-        
-        .upload-icon {
-            transition: all 0.3s ease;
-        }
-        
-        .upload-icon:hover {
-            transform: scale(1.1);
+            flex-direction: column;
+            gap: 0.75rem;
+            padding: 1.5rem;
         }
     </style>
+</head>
 <body class="bg-gray-100">
     <!-- Sidebar -->
     <div class="sidebar fixed top-0 left-0 h-screen bg-white shadow-lg z-10">
@@ -177,8 +160,21 @@ $conn->close();
 
     <!-- Main Content -->
     <div class="main-content min-h-screen p-8">
-    <div id="chats-section" class="section active">
-     <!-- Chats Section -->
+        <!-- Dashboard Section -->
+        <div id="dashboard-section" class="section">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-2xl font-semibold mb-6">Counselor Dashboard</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Empty Dashboard Widgets -->
+                    <div class="bg-gray-50 p-6 rounded-lg border border-gray-200"></div>
+                    <div class="bg-gray-50 p-6 rounded-lg border border-gray-200"></div>
+                    <div class="bg-gray-50 p-6 rounded-lg border border-gray-200"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chats Section -->
+        <div id="chats-section" class="section active">
             <div class="flex h-screen bg-gray-100">
                 <!-- Left sidebar for chat user list -->
                 <div class="w-1/4 bg-white border-r shadow-md flex flex-col">
@@ -190,7 +186,6 @@ $conn->close();
                     </div>
                     <ul id="userList" class="overflow-y-auto flex-grow">
                         <!-- Dynamically loaded user list will appear here -->
-                        
                     </ul>
                 </div>
 
@@ -200,8 +195,8 @@ $conn->close();
                         <h2 id="chat-header" class="text-xl font-semibold text-gray-800">Chat with Student</h2>
                     </div>
 
-                    <div id="chatMessages" class="flex-grow overflow-y-auto p-6 space-y-4 bg-gray-50 max-h-[calc(100vh-10rem)]">
-                        <!-- Messages from the selected student will appear here dynamically -->
+                    <div id="chatMessages" class="flex-grow overflow-y-auto p-6 bg-gray-50 max-h-[calc(100vh-10rem)]">
+                        <!-- Messages will appear here dynamically -->
                     </div>
 
                     <div class="p-4 border-t bg-gray-50 flex items-center">
@@ -216,12 +211,13 @@ $conn->close();
                 </div>
             </div>
         </div>
-
     </div>
-</body>
-<script>
+
+    <script>
         let pusher;
         let channel;
+        let isSending = false;
+        const mhpId = <?php echo $mhp_id; ?>;
 
         document.addEventListener('DOMContentLoaded', function() {
             // Initialize Pusher
@@ -230,126 +226,253 @@ $conn->close();
                 encrypted: true
             });
 
-            // Set up Chat User List Search
+            // Menu item click handlers
+            document.getElementById('dashboardItem').addEventListener('click', function(e) {
+                e.preventDefault();
+                switchSection('dashboard');
+            });
+
+            document.getElementById('chatItem').addEventListener('click', function(e) {
+                e.preventDefault();
+                switchSection('chats');
+            });
+
+            // Set up chat functionality
             setupUserSearch();
+            
+            // Request notification permission
+            if ('Notification' in window) {
+                Notification.requestPermission();
+            }
         });
+
+        function switchSection(sectionName) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(`${sectionName}-section`).classList.add('active');
+
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+                item.classList.remove('text-gray-600');
+            });
+            
+            document.getElementById(`${sectionName}Item`).classList.add('active');
+            document.getElementById(`${sectionName}Item`).classList.add('text-gray-600');
+        }
 
         function setupUserSearch() {
             const searchInput = document.getElementById('searchInput');
-            searchInput.addEventListener('input', function() {
-                const query = searchInput.value.toLowerCase();
-                fetch(`MHPSearch.php?fetchUsers=true&search=${encodeURIComponent(query)}`)
-                    .then(response => response.json())
-                    .then(users => populateUserList(users))
-                    .catch(error => console.error('Error fetching users:', error));
-            });
+            searchInput.addEventListener('input', debounce(function() {
+                const query = searchInput.value.trim();
+                if (query.length > 0) {
+                    fetch(`MHPSearch.php?fetchUsers=true&search=${encodeURIComponent(query)}`)
+                        .then(response => response.json())
+                        .then(users => populateUserList(users))
+                        .catch(error => {
+                            console.error('Error fetching users:', error);
+                            document.getElementById('userList').innerHTML = 
+                                '<li class="p-4 text-red-500">Error loading users</li>';
+                        });
+                } else {
+                    fetchUsers();
+                }
+            }, 300));
 
-            // Load all users initially
-            searchInput.dispatchEvent(new Event('input'));
+            fetchUsers();
+        }
+
+        function fetchUsers() {
+            fetch(`MHPSearch.php?fetchUsers=true`)
+                .then(response => response.json())
+                .then(users => populateUserList(users))
+                .catch(error => {
+                    console.error('Error fetching users:', error);
+                    document.getElementById('userList').innerHTML = 
+                        '<li class="p-4 text-red-500">Error loading users</li>';
+                });
+        }
+
+        function debounce(func, wait) {
+            let timeout;
+            return function() {
+                const context = this, args = arguments;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), wait);
+            };
         }
 
         function populateUserList(users) {
             const userList = document.getElementById('userList');
             userList.innerHTML = '';
 
+            if (users.length === 0) {
+                userList.innerHTML = '<li class="p-4 text-gray-500">No students found</li>';
+                return;
+            }
+
             users.forEach(user => {
                 const li = document.createElement('li');
                 li.className = 'p-4 flex items-center cursor-pointer hover:bg-gray-100 border-b';
+                li.dataset.studentId = user.id;
+                
+                const unreadBadge = user.unread_count > 0 ? 
+                    `<span class="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center ml-2">
+                        ${user.unread_count}
+                    </span>` : '';
+                
                 li.innerHTML = `
-                    <div class="w-10 h-10 bg-gray-300 rounded-full mr-3"></div>
-                    <div class="flex-1">
-                        <p class="font-semibold">${user.firstName} ${user.lastName}</p>
-                        <p class="text-sm text-gray-500">Latest message preview...</p>
+                    <div class="w-10 h-10 bg-gray-300 rounded-full mr-3 flex items-center justify-center">
+                        ${user.firstName.charAt(0)}${user.lastName.charAt(0)}
                     </div>
-                    <span class="text-sm text-gray-400">10:37 AM</span>
+                    <div class="flex-1">
+                        <div class="flex items-center">
+                            <p class="font-semibold">${user.firstName} ${user.lastName}</p>
+                            ${unreadBadge}
+                        </div>
+                        <p class="text-sm text-gray-500 truncate">
+                            ${user.last_message || 'No messages yet'}
+                        </p>
+                    </div>
+                    <span class="text-sm text-gray-400">
+                        ${user.last_message_time ? formatTime(user.last_message_time) : ''}
+                    </span>
                 `;
-                li.addEventListener('click', () => openChatForMHP(user.id, user.firstName + ' ' + user.lastName));
+                li.addEventListener('click', () => openChat(user.id, `${user.firstName} ${user.lastName}`));
                 userList.appendChild(li);
             });
         }
 
-        function openChatForMHP(studentId, studentName) {
-            // 1) Set chat header
-            document.getElementById('chat-header').innerText = 'Chat with ' + studentName;
-            // 2) Store student_id in a hidden input
-            document.getElementById('student_id').value = studentId;
-            // 3) Clear chatMessages
-            const chatMessagesDiv = document.getElementById('chatMessages');
-            chatMessagesDiv.innerHTML = '';
+        function formatTime(timestamp) {
+            return moment(timestamp).calendar(null, {
+                sameDay: 'h:mm A',
+                lastDay: '[Yesterday]',
+                lastWeek: 'dddd',
+                sameElse: 'MM/DD/YYYY'
+            });
+        }
 
-            // 4) Unsubscribe from previous channel if any
+        function openChat(studentId, studentName) {
+            document.getElementById('chat-header').innerText = `Chat with ${studentName}`;
+            document.getElementById('student_id').value = studentId;
+            
+            const chatMessagesDiv = document.getElementById('chatMessages');
+            chatMessagesDiv.innerHTML = '<div class="text-center py-4 text-gray-500">Loading messages...</div>';
+
+            // Unsubscribe from previous channel if any
             if (channel) {
                 pusher.unsubscribe(channel.name);
             }
 
-            // 5) Subscribe to new channel for that student
-            channel = pusher.subscribe('chat_' + studentId);
-             // Clean up first - remove any existing listeners
-             channel.unbind('new-message');
-            channel.bind('new-message', function(data) {
-                // You can check data.sender_id, data.receiver_id, etc.
-                // e.g., if data.sender_type !== 'MHP'
-                if (data.sender_type !== 'MHP') {
-                    appendMessageToUI(data);
-                }  else {
-                        console.log('Ignored message from MHP via Pusher');
-                    }
-            });
+            // Subscribe to new channel
+            channel = pusher.subscribe(`chat_${studentId}`);
+            channel.bind('new-message', handleNewMessage);
 
-            // 6) Fetch existing chat from the server for this conversation
+            // Load message history
             fetch(`?fetchMessages=true&student_id=${studentId}`)
                 .then(response => response.json())
                 .then(messages => {
-                    messages.forEach(msg => appendMessageToUI(msg));
+                    chatMessagesDiv.innerHTML = '';
+                    if (messages.length === 0) {
+                        chatMessagesDiv.innerHTML = '<div class="text-center py-4 text-gray-500">No messages yet. Start the conversation!</div>';
+                        return;
+                    }
+                    messages.forEach(msg => appendMessage(msg));
+                    scrollToBottom();
+                    markMessagesAsRead(studentId);
+                    updateUserListUnreadStatus(studentId);
                 })
-                .catch(error => console.error('Error fetching messages:', error));
+                .catch(error => {
+                    console.error('Error fetching messages:', error);
+                    chatMessagesDiv.innerHTML = '<div class="text-center py-4 text-red-500">Error loading messages</div>';
+                });
         }
 
-        function createMessageElement(message, type) {
-            const div = document.createElement('div');
-            const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            
-            div.className = `mb-4 ${type === 'sent' ? 'flex justify-end' : 'flex justify-start'}`;
-            
-            const messageContainer = document.createElement('div');
-            messageContainer.className = `max-w-[70%] flex flex-col ${type === 'sent' ? 'items-end' : 'items-start'}`;
-            
-            const messageContent = document.createElement('div');
-            messageContent.className = `px-4 py-2 rounded-lg break-words`;
-            messageContent.style.backgroundColor = type === 'sent' ? '#e6e6e6' : '#1cabe3';
-            messageContent.style.color = type === 'sent' ? '#333' : '#fff';
-            messageContent.textContent = message;
-            
-            const timeStampElem = document.createElement('div');
-            timeStampElem.className = 'text-xs text-gray-500 mt-1';
-            timeStampElem.textContent = timestamp;
-            
-            messageContainer.appendChild(messageContent);
-            messageContainer.appendChild(timeStampElem);
-            div.appendChild(messageContainer);
-            
-            return div;
+        function markMessagesAsRead(studentId) {
+            fetch('mark_messages_read.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `student_id=${studentId}&mhp_id=${mhpId}`
+            }).catch(error => console.error('Error marking messages as read:', error));
         }
 
-        function appendMessageToUI(msg) {
+        function updateUserListUnreadStatus(studentId) {
+            const userItems = document.querySelectorAll('#userList li');
+            userItems.forEach(item => {
+                if (item.dataset.studentId == studentId) {
+                    const badge = item.querySelector('.bg-red-500');
+                    if (badge) badge.remove();
+                }
+            });
+        }
+
+        function handleNewMessage(data) {
+            const currentStudentId = document.getElementById('student_id').value;
+            
+            if (currentStudentId && parseInt(currentStudentId) === parseInt(data.student_id)) {
+                appendMessage(data);
+                scrollToBottom();
+                markMessagesAsRead(data.student_id);
+            } else {
+                // Show notification for new message in other chats
+                if (data.sender_type === 'student' && Notification.permission === 'granted') {
+                    new Notification(`New message from ${data.student_name || 'Student'}`, {
+                        body: data.message.length > 50 ? data.message.substring(0, 50) + '...' : data.message
+                    });
+                }
+                
+                // Update unread count in user list
+                const userItem = document.querySelector(`#userList li[data-student-id="${data.student_id}"]`);
+                if (userItem) {
+                    let badge = userItem.querySelector('.bg-red-500');
+                    if (badge) {
+                        badge.textContent = parseInt(badge.textContent) + 1;
+                    } else {
+                        userItem.querySelector('.font-semibold').insertAdjacentHTML('afterend', 
+                            `<span class="bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center ml-2">1</span>`);
+                    }
+                }
+            }
+        }
+
+        function appendMessage(msg) {
             const chatMessagesDiv = document.getElementById('chatMessages');
+            const isSent = msg.sender_type === 'MHP';
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = isSent ? 'message-sent' : 'message-received';
+            
+            messageDiv.innerHTML = `
+                <div class="px-4 py-2">
+                    <div class="break-words">${msg.message}</div>
+                    <div class="text-xs mt-1 ${isSent ? 'text-blue-100' : 'text-gray-500'}">
+                        ${formatTime(msg.timestamp)}
+                    </div>
+                </div>
+            `;
+            
+            chatMessagesDiv.appendChild(messageDiv);
+        }
 
-            const messageElement = createMessageElement(msg.message, msg.sender_type === 'student' ? 'received' : 'sent');
-            chatMessagesDiv.appendChild(messageElement);
-
-            // Scroll to the bottom of the chat
+        function scrollToBottom() {
+            const chatMessagesDiv = document.getElementById('chatMessages');
             chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
         }
 
         function sendMessage() {
-            const message = document.getElementById('message_input').value.trim();
+            if (isSending) return;
+            
+            const messageInput = document.getElementById('message_input');
+            const message = messageInput.value.trim();
             const studentId = document.getElementById('student_id').value;
 
-            if (!message || !studentId) {
-                alert(message ? 'Please select a student first.' : 'Please enter a message.');
-                return;
-            }
+            if (!message || !studentId) return;
 
+            isSending = true;
+            messageInput.disabled = true;
+            
             fetch('messages_handler_mhp.php', {
                 method: 'POST',
                 headers: {
@@ -359,32 +482,29 @@ $conn->close();
             })
             .then(response => response.json())
             .then(data => {
-                console.log('Response from server:', data);
                 if (data.success) {
-                    // Create and append the sent message
-                    const newMsg = {
-                        message: message,
-                        sender_type: 'MHP',
-                        timestamp: new Date().toISOString()
-                    };
-                   // appendMessageToUI(newMsg);
-                    document.getElementById('message_input').value = '';
+                    messageInput.value = '';
                 } else {
-                    alert(data.error || 'Failed to send message');
+                    throw new Error(data.error || 'Failed to send message');
                 }
             })
             .catch(error => {
-                console.error('Error sending message:', error);
-                alert('Error sending message. Please try again.');
+                console.error('Error:', error);
+                alert(error.message);
+            })
+            .finally(() => {
+                isSending = false;
+                messageInput.disabled = false;
+                messageInput.focus();
             });
         }
-        // Add "Enter key" event for sending message
+
+        // Send message on Enter key
         document.getElementById('message_input').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 sendMessage();
             }
         });
     </script>
-<script src="mhp_sidebar.js"></script>
-</html>
+</body>
 </html>

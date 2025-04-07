@@ -21,8 +21,8 @@
             'pussy', 'nigga', 'whore', 'slut', 'cocksucker', 'retard', 'crackhead', 'twat', 'fag', 
             'kike', 'chink', 'gook', 'spic', 'raghead', 'sandnigger', 'dirty Jew', 'wog', 'kaffir', 
             'nazi', 'towelhead', 'beaner', 'polack', 'dago', 'yid', 'wop', 'cholo', 'gypo', 'prick', 
-            'cunt', 'whore', 'pikey', 'inbred', 'hillbilly', 'redneck', 'mamatay'
-        ];
+            'cunt', 'whore', 'pikey', 'inbred', 'hillbilly', 'redneck', 'mamatay', 'kinnam', 'panget', 'bcbc', '8080'      
+         ];
         
         
         // Replace flagged words with '[redacted]' and set the detection flag
@@ -181,6 +181,10 @@
             <a href="#" class="menu-item flex items-center px-6 py-3 text-gray-600" data-section="profile" id="ProfileItem">
             <img src="images/profile.svg" alt="Mental Wellness Companion" class="w-4 h-4">
                 <span class="menu-text ml-3">Profile</span>
+            </a>
+            <a href="#" class="menu-item flex items-center px-6 py-3 text-gray-600" data-section="chat" id="ChatItem">
+            <img src="images/profile.svg" alt="Mental Wellness Companion" class="w-4 h-4">
+                <span class="menu-text ml-3">Chat</span>
             </a>
             
         </nav>

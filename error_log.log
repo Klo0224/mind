@@ -1,2 +1,22 @@
 [19-Feb-2025 16:26:15 Europe/Berlin] PHP Warning:  Undefined variable $mhp_id in C:\xampp\htdocs\testers\mhp_chat.php on line 24
 [19-Feb-2025 16:26:19 Europe/Berlin] PHP Warning:  Undefined variable $mhp_id in C:\xampp\htdocs\testers\mhp_chat.php on line 24
+[24-Mar-2025 06:02:54 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: Table '_mindsoothe.students' doesn't exist in C:\xampp1\htdocs\testers\mhp_chat.php:47
+Stack trace:
+#0 C:\xampp1\htdocs\testers\mhp_chat.php(47): mysqli->prepare('SELECT id, firs...')
+#1 {main}
+  thrown in C:\xampp1\htdocs\testers\mhp_chat.php on line 47
+[24-Mar-2025 06:02:58 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: Table '_mindsoothe.students' doesn't exist in C:\xampp1\htdocs\testers\mhp_chat.php:47
+Stack trace:
+#0 C:\xampp1\htdocs\testers\mhp_chat.php(47): mysqli->prepare('SELECT id, firs...')
+#1 {main}
+  thrown in C:\xampp1\htdocs\testers\mhp_chat.php on line 47
+[24-Mar-2025 06:02:59 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: Table '_mindsoothe.students' doesn't exist in C:\xampp1\htdocs\testers\mhp_chat.php:47
+Stack trace:
+#0 C:\xampp1\htdocs\testers\mhp_chat.php(47): mysqli->prepare('SELECT id, firs...')
+#1 {main}
+  thrown in C:\xampp1\htdocs\testers\mhp_chat.php on line 47
+[24-Mar-2025 06:02:59 Europe/Berlin] PHP Fatal error:  Uncaught mysqli_sql_exception: Table '_mindsoothe.students' doesn't exist in C:\xampp1\htdocs\testers\mhp_chat.php:47
+Stack trace:
+#0 C:\xampp1\htdocs\testers\mhp_chat.php(47): mysqli->prepare('SELECT id, firs...')
+#1 {main}
+  thrown in C:\xampp1\htdocs\testers\mhp_chat.php on line 47

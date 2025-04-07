@@ -169,9 +169,10 @@ $conn->close();
                 </div>
             </div>
 
-            <div class="text-center mt-4 no-print">
-                <button id="printCallSlip" type="button" class="bg-blue-500 text-white px-4 py-2 rounded-lg shadow">Print Call Slip</button>
-            </div>
+            <div class="text-center mt-4 no-print flex justify-center gap-4">
+    <button id="backButton" type="button" class="bg-blue-500 text-white px-4 py-2 rounded-lg shadow"     onclick="window.location.href='mhp_dashboard.php'">Back to Dashboard</button>
+    <button id="printCallSlip" type="button" class="bg-blue-500 text-white px-4 py-2 rounded-lg shadow">Print Call Slip</button>
+</div>
         </form>
     </div>
 

@@ -60,7 +60,7 @@ if ($data['total_score'] >= 0 && $data['total_score'] <= 4) {
     $severity = "Severe";
 }
 
-// Convert numeric answers to text responses
+// phq9_responses table columns
 $textAnswers = array_map(function($answer) use ($answerTexts) {
     return isset($answerTexts[$answer]) ? $answerTexts[$answer] : "Invalid Response";
 }, $data['answers']);
